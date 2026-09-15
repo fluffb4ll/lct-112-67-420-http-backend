@@ -1,0 +1,3 @@
+spring:
+  application:
+    name: lct-112-67-420-http-backend
