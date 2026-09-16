@@ -1,6 +1,7 @@
 package com.fluffb4ll.lct112HttpBackend.service;
 
 import com.fluffb4ll.lct112HttpBackend.config.AuthProperties;
+import com.fluffb4ll.lct112HttpBackend.dto.response.LoginResponseDto;
 import com.fluffb4ll.lct112HttpBackend.entity.AuthTokenEntity;
 import com.fluffb4ll.lct112HttpBackend.entity.UserEntity;
 import com.fluffb4ll.lct112HttpBackend.repository.AuthRepository;
@@ -12,8 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class AuthService {
@@ -33,7 +33,7 @@ public class AuthService {
     }
 
     @Transactional
-    public List<UUID> login(String nickname, String rawPassword) throws SecurityException {
+    public LoginResponseDto login(String nickname, String rawPassword) throws SecurityException {
         UserEntity user = userRepository.findByUsername(nickname)
                 .orElseThrow(() -> new SecurityException("Wrong credentials"));
         if (!passEncoder.matches(rawPassword, user.getPasswordHash()))
@@ -45,7 +45,7 @@ public class AuthService {
                 .plusMinutes(properties.tokenExpirationMins());
         AuthTokenEntity tokenEntity = new AuthTokenEntity(user.getId(), token, expiresAt);
         authRepository.save(tokenEntity);
-        return List.of(user.getId(), token);
+        return createLoginResponse(user, tokenEntity);
     }
 
 //    @Transactional
@@ -68,10 +68,32 @@ public class AuthService {
 
     @Transactional
     public boolean verifyAuthToken(UUID userId, UUID receivedAT) {
-        AuthTokenEntity storedAT = authRepository.findTokenByUserId(userId).orElse(null);
-        if (storedAT == null)
-            return false;
-        return storedAT.getToken().equals(receivedAT);
+        return authRepository.findTokenByUserId(userId)
+                .filter(stored -> stored.getToken().equals(receivedAT))
+                .filter(stored -> stored.getExpiresAt().isAfter(OffsetDateTime.now()))
+                .isPresent();
+    }
+
+    private LoginResponseDto createLoginResponse(UserEntity user, AuthTokenEntity token) {
+        // TODO: научить парсить дтошки, роли и права
+        String role = null;
+        Map<String, Boolean> rights = new HashMap<>();
+        LoginResponseDto.DepartmentDto department = null;
+        List<LoginResponseDto.StudyGroupDto> studyGroupDtos = new ArrayList<>();
+        return new LoginResponseDto(
+                null,
+                token.getToken(),
+                token.getExpiresAt(),
+                new LoginResponseDto.UserInfoDto(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getFullName(),
+                        role,
+                        rights,
+                        department,
+                        studyGroupDtos
+                )
+        );
     }
 }
 
