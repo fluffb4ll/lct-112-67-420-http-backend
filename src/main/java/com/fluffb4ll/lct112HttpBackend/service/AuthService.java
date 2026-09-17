@@ -3,10 +3,12 @@ package com.fluffb4ll.lct112HttpBackend.service;
 import com.fluffb4ll.lct112HttpBackend.config.AuthProperties;
 import com.fluffb4ll.lct112HttpBackend.dto.response.LoginResponseDto;
 import com.fluffb4ll.lct112HttpBackend.entity.AuthTokenEntity;
+import com.fluffb4ll.lct112HttpBackend.entity.DepartmentEntity;
 import com.fluffb4ll.lct112HttpBackend.entity.RoleEntity;
 import com.fluffb4ll.lct112HttpBackend.entity.UserEntity;
 import com.fluffb4ll.lct112HttpBackend.model.enums.Permissions;
 import com.fluffb4ll.lct112HttpBackend.repository.AuthRepository;
+import com.fluffb4ll.lct112HttpBackend.repository.DepartmentRepository;
 import com.fluffb4ll.lct112HttpBackend.repository.RolesRepository;
 import com.fluffb4ll.lct112HttpBackend.repository.UserRepository;
 import com.fluffb4ll.lct112HttpBackend.util.IdGeneratorUtil;
@@ -28,17 +30,19 @@ public class AuthService {
     private final RolesRepository rolesRepository;
     private final PasswordEncoder passEncoder;
     private final AuthProperties properties;
+    private final DepartmentRepository departmentRepository;
 
     public AuthService(UserRepository userRepository,
                        AuthRepository authRepository,
                        RolesRepository rolesRepository,
                        PasswordEncoder passEncoder,
-                       AuthProperties properties) {
+                       AuthProperties properties, DepartmentRepository departmentRepository) {
         this.userRepository = userRepository;
         this.authRepository = authRepository;
         this.rolesRepository = rolesRepository;
         this.passEncoder = passEncoder;
         this.properties = properties;
+        this.departmentRepository = departmentRepository;
     }
 
     @Transactional
@@ -87,10 +91,10 @@ public class AuthService {
         // TODO: научить парсить дтошки, роли и права
         RoleEntity roleEntity = rolesRepository.findById(user.getRoleId())
                 .orElseThrow(() -> new IllegalArgumentException(String.format("Unknown role index: %d%n", user.getRoleId())));
-        LoginResponseDto.DepartmentDto department = null;
+        DepartmentEntity department = departmentRepository.findById(user.getDepartmentId())
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Unknown department id: %s%n", user.getDepartmentId())));
         List<LoginResponseDto.StudyGroupDto> studyGroupDtos = new ArrayList<>();
         return new LoginResponseDto(
-                null,
                 token.getToken(),
                 token.getExpiresAt(),
                 new LoginResponseDto.UserInfoDto(
@@ -99,7 +103,11 @@ public class AuthService {
                         user.getFullName(),
                         roleEntity.getName(),
                         roleEntity.getPermissions(),
-                        department,
+                        new LoginResponseDto.DepartmentDto(
+                                department.getId(),
+                                department.getName(),
+                                department.getCode()
+                        ),
                         studyGroupDtos
                 )
         );

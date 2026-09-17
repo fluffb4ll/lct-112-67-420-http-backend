@@ -1,13 +1,13 @@
 package com.fluffb4ll.lct112HttpBackend.dto.response;
 
+import com.fluffb4ll.lct112HttpBackend.entity.DepartmentEntity;
+
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 public record LoginResponseDto (
-        String errorMessage,
         UUID token,
         OffsetDateTime expiresAt,
         UserInfoDto user
