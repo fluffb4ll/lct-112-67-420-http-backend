@@ -87,17 +87,28 @@ public class AuthService {
         // TODO: протестить, проверить оптимизацию
         RoleEntity roleEntity = rolesRepository.findById(user.getRoleId())
                 .orElseThrow(() -> new IllegalArgumentException(String.format("Unknown role index: %d%n", user.getRoleId())));
-        DepartmentEntity departmentEntity = departmentRepository.findById(user.getDepartmentId()).orElse(null);
+
+        LoginResponseDto.DepartmentDto departmentDto = null;
+        if (user.getDepartmentId() != null)
+            departmentDto = departmentRepository.findById(user.getDepartmentId())
+                    .map(d -> new LoginResponseDto.DepartmentDto(
+                            d.getId(),
+                            d.getName(),
+                            d.getCode()
+                    ))
+                    .orElse(null);
+
         List<LoginResponseDto.StudyGroupDto> studyGroupDtos = new ArrayList<>();
-        for (UUID id : user.getStudyGroupIds()) {
-            StudyGroupEntity studyGroupEntity = studyGroupRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException(String.format("Unknown study group id: %s%n", id)));
-            studyGroupDtos.add(new LoginResponseDto.StudyGroupDto(
-                    studyGroupEntity.getId(),
-                    studyGroupEntity.getName(),
-                    studyGroupEntity.getTeacherId()
-            ));
-        }
+        List<UUID> groupIds = user.getStudyGroupIds();
+        if (groupIds != null && !groupIds.isEmpty())
+            studyGroupDtos = studyGroupRepository.findAllById(groupIds).stream()
+                    .map(g -> new LoginResponseDto.StudyGroupDto(
+                            g.getId(),
+                            g.getName(),
+                            g.getTeacherId()
+                    ))
+                    .toList();
+
         return new LoginResponseDto(
                 token.getToken(),
                 token.getExpiresAt(),
@@ -107,11 +118,7 @@ public class AuthService {
                         user.getFullName(),
                         roleEntity.getName(),
                         roleEntity.getPermissions(),
-                        new LoginResponseDto.DepartmentDto(
-                                departmentEntity.getId(),
-                                departmentEntity.getName(),
-                                departmentEntity.getCode()
-                        ),
+                        departmentDto,
                         studyGroupDtos
                 )
         );
