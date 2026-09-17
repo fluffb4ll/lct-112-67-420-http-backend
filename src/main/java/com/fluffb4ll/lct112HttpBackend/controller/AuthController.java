@@ -6,6 +6,8 @@ import com.fluffb4ll.lct112HttpBackend.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.AuthenticationException;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -16,19 +18,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto authDto) {
+    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto authDto) throws AuthenticationException {
         return ResponseEntity.ok(authService.login(authDto.username(), authDto.password()));
     }
 
 
 //    @PostMapping("/signup")
-//    public ResponseEntity<AuthResponseDto> signup(@RequestBody AuthRequestDto authDto) {
-//        try {
-//            UUID token = authService.signup(authDto.username(), authDto.password());
-//            return ResponseEntity.ok(AuthResponseDto.signupOk(token));
-//        } catch (SecurityException e) {
-//            return ResponseEntity.badRequest().body(AuthResponseDto.error(e.getMessage()));
-//        }
+//    public ResponseEntity<SignupResponseDto> signup(@RequestBody LoginRequestDto authDto) {
+//            return ResponseEntity.ok(authService.signup(authDto.username(), authDto.password()));
 //    }
 }
 

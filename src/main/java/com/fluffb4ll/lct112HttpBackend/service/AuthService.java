@@ -11,7 +11,9 @@ import com.fluffb4ll.lct112HttpBackend.util.RegexValidator;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
+import javax.naming.AuthenticationException;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -33,11 +35,11 @@ public class AuthService {
     }
 
     @Transactional
-    public LoginResponseDto login(String nickname, String rawPassword) throws SecurityException {
+    public LoginResponseDto login(String nickname, String rawPassword) throws AuthenticationException {
         UserEntity user = userRepository.findByUsername(nickname)
-                .orElseThrow(() -> new SecurityException("Wrong credentials"));
+                .orElseThrow(() -> new AuthenticationException("Wrong credentials"));
         if (!passEncoder.matches(rawPassword, user.getPasswordHash()))
-            throw new SecurityException("Wrong credentials");
+            throw new AuthenticationException("Wrong credentials");
 
         UUID token = IdGeneratorUtil.generateId();
         OffsetDateTime expiresAt = OffsetDateTime.now()
@@ -77,7 +79,7 @@ public class AuthService {
     private LoginResponseDto createLoginResponse(UserEntity user, AuthTokenEntity token) {
         // TODO: научить парсить дтошки, роли и права
         String role = null;
-        Map<String, Boolean> rights = new HashMap<>();
+        Set<String> permissions = new HashSet<>();
         LoginResponseDto.DepartmentDto department = null;
         List<LoginResponseDto.StudyGroupDto> studyGroupDtos = new ArrayList<>();
         return new LoginResponseDto(
@@ -89,7 +91,7 @@ public class AuthService {
                         user.getUsername(),
                         user.getFullName(),
                         role,
-                        rights,
+                        permissions,
                         department,
                         studyGroupDtos
                 )

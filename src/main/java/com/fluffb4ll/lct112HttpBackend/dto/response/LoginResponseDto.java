@@ -3,6 +3,7 @@ package com.fluffb4ll.lct112HttpBackend.dto.response;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public record LoginResponseDto (
@@ -16,7 +17,7 @@ public record LoginResponseDto (
             String username,
             String fullName,
             String role,
-            Map<String, Boolean> rights,
+            Set<String> permissions,
             DepartmentDto department,
             List<StudyGroupDto> studyGroups
     ) {}
