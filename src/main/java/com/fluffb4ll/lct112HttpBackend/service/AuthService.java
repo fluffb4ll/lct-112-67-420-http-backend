@@ -3,12 +3,16 @@ package com.fluffb4ll.lct112HttpBackend.service;
 import com.fluffb4ll.lct112HttpBackend.config.AuthProperties;
 import com.fluffb4ll.lct112HttpBackend.dto.response.LoginResponseDto;
 import com.fluffb4ll.lct112HttpBackend.entity.AuthTokenEntity;
+import com.fluffb4ll.lct112HttpBackend.entity.RoleEntity;
 import com.fluffb4ll.lct112HttpBackend.entity.UserEntity;
+import com.fluffb4ll.lct112HttpBackend.model.enums.Permissions;
 import com.fluffb4ll.lct112HttpBackend.repository.AuthRepository;
+import com.fluffb4ll.lct112HttpBackend.repository.RolesRepository;
 import com.fluffb4ll.lct112HttpBackend.repository.UserRepository;
 import com.fluffb4ll.lct112HttpBackend.util.IdGeneratorUtil;
 import com.fluffb4ll.lct112HttpBackend.util.RegexValidator;
 import jakarta.transaction.Transactional;
+import org.hibernate.exception.DataException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -21,15 +25,18 @@ import java.util.*;
 public class AuthService {
     private final UserRepository userRepository;
     private final AuthRepository authRepository;
+    private final RolesRepository rolesRepository;
     private final PasswordEncoder passEncoder;
     private final AuthProperties properties;
 
     public AuthService(UserRepository userRepository,
                        AuthRepository authRepository,
+                       RolesRepository rolesRepository,
                        PasswordEncoder passEncoder,
                        AuthProperties properties) {
         this.userRepository = userRepository;
         this.authRepository = authRepository;
+        this.rolesRepository = rolesRepository;
         this.passEncoder = passEncoder;
         this.properties = properties;
     }
@@ -78,8 +85,8 @@ public class AuthService {
 
     private LoginResponseDto createLoginResponse(UserEntity user, AuthTokenEntity token) {
         // TODO: научить парсить дтошки, роли и права
-        String role = null;
-        Set<String> permissions = new HashSet<>();
+        RoleEntity roleEntity = rolesRepository.findById(user.getRoleId())
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Unknown role index: %d%n", user.getRoleId())));
         LoginResponseDto.DepartmentDto department = null;
         List<LoginResponseDto.StudyGroupDto> studyGroupDtos = new ArrayList<>();
         return new LoginResponseDto(
@@ -90,8 +97,8 @@ public class AuthService {
                         user.getId(),
                         user.getUsername(),
                         user.getFullName(),
-                        role,
-                        permissions,
+                        roleEntity.getName(),
+                        roleEntity.getPermissions(),
                         department,
                         studyGroupDtos
                 )
