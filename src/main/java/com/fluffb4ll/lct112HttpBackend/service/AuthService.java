@@ -85,29 +85,21 @@ public class AuthService {
 
     private LoginResponseDto createLoginResponse(UserEntity user, AuthTokenEntity token) {
         // TODO: протестить, проверить оптимизацию
-        RoleEntity roleEntity = rolesRepository.findById(user.getRoleId())
-                .orElseThrow(() -> new IllegalArgumentException(String.format("Unknown role index: %d%n", user.getRoleId())));
-
         LoginResponseDto.DepartmentDto departmentDto = null;
-        if (user.getDepartmentId() != null)
-            departmentDto = departmentRepository.findById(user.getDepartmentId())
-                    .map(d -> new LoginResponseDto.DepartmentDto(
-                            d.getId(),
-                            d.getName(),
-                            d.getCode()
-                    ))
-                    .orElse(null);
+        if (user.getDepartment() != null)
+            departmentDto = new LoginResponseDto.DepartmentDto(
+                    user.getDepartment().getId(),
+                    user.getDepartment().getCode(),
+                    user.getDepartment().getName()
+            );
 
-        List<LoginResponseDto.StudyGroupDto> studyGroupDtos = new ArrayList<>();
-        List<UUID> groupIds = user.getStudyGroupIds();
-        if (groupIds != null && !groupIds.isEmpty())
-            studyGroupDtos = studyGroupRepository.findAllById(groupIds).stream()
-                    .map(g -> new LoginResponseDto.StudyGroupDto(
-                            g.getId(),
-                            g.getName(),
-                            g.getTeacherId()
-                    ))
-                    .toList();
+        List<LoginResponseDto.StudyGroupDto> studyGroupDtos = user.getStudyGroups().stream()
+                .map(g -> new LoginResponseDto.StudyGroupDto(
+                        g.getId(),
+                        g.getName(),
+                        g.getTeacherId()
+                ))
+                .toList();
 
         return new LoginResponseDto(
                 token.getToken(),
@@ -116,8 +108,8 @@ public class AuthService {
                         user.getId(),
                         user.getUsername(),
                         user.getFullName(),
-                        roleEntity.getName(),
-                        roleEntity.getPermissions(),
+                        user.getRole().getName(),
+                        user.getRole().getPermissionsAsSet(),
                         departmentDto,
                         studyGroupDtos
                 )

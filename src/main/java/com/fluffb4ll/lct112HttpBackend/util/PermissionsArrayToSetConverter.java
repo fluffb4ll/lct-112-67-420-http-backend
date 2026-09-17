@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 @Converter
 public class PermissionsArrayToSetConverter implements AttributeConverter<Set<String>, Object> {
+    // TODO: удалить, если больше не требуется
     @Override
     public Integer[] convertToDatabaseColumn(Set<String> attribute) {
         if (attribute == null || attribute.isEmpty())

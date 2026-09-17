@@ -7,6 +7,7 @@ import lombok.*;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -30,12 +31,22 @@ public class UserEntity {
     @Column(name = "full_name", length = 150, nullable = false)
     private String fullName;
 
-    @Column(name = "role_id", nullable = false)
-    private int roleId;
+//    @Column(name = "role_id", nullable = false)
+//    private int roleId;
+//
+//    @Setter
+//    @Column(name = "department_id")
+//    private UUID departmentId;
 
     @Setter
-    @Column(name = "department_id")
-    private UUID departmentId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id", nullable = false)
+    private RoleEntity role;
+
+    @Setter
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    private DepartmentEntity department;
 
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
@@ -48,22 +59,42 @@ public class UserEntity {
     @Column(name = "is_active")
     private boolean active;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(
+//    @ElementCollection(fetch = FetchType.LAZY)
+//    @CollectionTable(
+//            name = "study_group_members",
+//            schema = "iam",
+//            joinColumns = @JoinColumn(name = "student_id")
+//    )
+//    @Column(name = "group_id")
+//    private List<UUID> studyGroupIds = new ArrayList<>();
+
+    @Setter
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
             name = "study_group_members",
             schema = "iam",
-            joinColumns = @JoinColumn(name = "student_id")
+            joinColumns = @JoinColumn(name = "student_id"),
+            inverseJoinColumns = @JoinColumn(name = "group_id")
     )
-    @Column(name = "group_id")
-    private List<UUID> studyGroupIds = new ArrayList<>();
+    private Set<StudyGroupEntity> studyGroups;
 
-    public UserEntity(String username, String passwordHash, String fullName, int roleId) {
-        id = IdGeneratorUtil.generateId();
+//    public UserEntity(String username, String passwordHash, String fullName, int roleId) {
+//        id = IdGeneratorUtil.generateId();
+//        this.username = username;
+//        this.passwordHash = passwordHash;
+//        this.fullName = fullName;
+//        this.roleId = roleId;
+//        this.active = true;
+//        createdAt = OffsetDateTime.now();
+//    }
+    public UserEntity(String username, String passwordHash, String fullName, RoleEntity role) {
+        this.id = IdGeneratorUtil.generateId();
         this.username = username;
         this.passwordHash = passwordHash;
         this.fullName = fullName;
-        this.roleId = roleId;
+        this.role = role;
         this.active = true;
-        createdAt = OffsetDateTime.now();
+        this.createdAt = OffsetDateTime.now();
+        this.updatedAt = OffsetDateTime.now();
     }
 }
