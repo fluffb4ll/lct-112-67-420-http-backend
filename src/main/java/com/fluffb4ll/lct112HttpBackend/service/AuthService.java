@@ -2,15 +2,9 @@ package com.fluffb4ll.lct112HttpBackend.service;
 
 import com.fluffb4ll.lct112HttpBackend.config.AuthProperties;
 import com.fluffb4ll.lct112HttpBackend.dto.response.LoginResponseDto;
-import com.fluffb4ll.lct112HttpBackend.entity.AuthTokenEntity;
-import com.fluffb4ll.lct112HttpBackend.entity.DepartmentEntity;
-import com.fluffb4ll.lct112HttpBackend.entity.RoleEntity;
-import com.fluffb4ll.lct112HttpBackend.entity.UserEntity;
+import com.fluffb4ll.lct112HttpBackend.entity.*;
 import com.fluffb4ll.lct112HttpBackend.model.enums.Permissions;
-import com.fluffb4ll.lct112HttpBackend.repository.AuthRepository;
-import com.fluffb4ll.lct112HttpBackend.repository.DepartmentRepository;
-import com.fluffb4ll.lct112HttpBackend.repository.RolesRepository;
-import com.fluffb4ll.lct112HttpBackend.repository.UserRepository;
+import com.fluffb4ll.lct112HttpBackend.repository.*;
 import com.fluffb4ll.lct112HttpBackend.util.IdGeneratorUtil;
 import com.fluffb4ll.lct112HttpBackend.util.RegexValidator;
 import jakarta.transaction.Transactional;
@@ -31,18 +25,20 @@ public class AuthService {
     private final PasswordEncoder passEncoder;
     private final AuthProperties properties;
     private final DepartmentRepository departmentRepository;
+    private final StudyGroupRepository studyGroupRepository;
 
     public AuthService(UserRepository userRepository,
                        AuthRepository authRepository,
                        RolesRepository rolesRepository,
                        PasswordEncoder passEncoder,
-                       AuthProperties properties, DepartmentRepository departmentRepository) {
+                       AuthProperties properties, DepartmentRepository departmentRepository, StudyGroupRepository studyGroupRepository) {
         this.userRepository = userRepository;
         this.authRepository = authRepository;
         this.rolesRepository = rolesRepository;
         this.passEncoder = passEncoder;
         this.properties = properties;
         this.departmentRepository = departmentRepository;
+        this.studyGroupRepository = studyGroupRepository;
     }
 
     @Transactional
@@ -88,12 +84,20 @@ public class AuthService {
     }
 
     private LoginResponseDto createLoginResponse(UserEntity user, AuthTokenEntity token) {
-        // TODO: научить парсить дтошки, роли и права
+        // TODO: протестить, проверить оптимизацию
         RoleEntity roleEntity = rolesRepository.findById(user.getRoleId())
                 .orElseThrow(() -> new IllegalArgumentException(String.format("Unknown role index: %d%n", user.getRoleId())));
-        DepartmentEntity department = departmentRepository.findById(user.getDepartmentId())
-                .orElseThrow(() -> new IllegalArgumentException(String.format("Unknown department id: %s%n", user.getDepartmentId())));
+        DepartmentEntity departmentEntity = departmentRepository.findById(user.getDepartmentId()).orElse(null);
         List<LoginResponseDto.StudyGroupDto> studyGroupDtos = new ArrayList<>();
+        for (UUID id : user.getStudyGroupIds()) {
+            StudyGroupEntity studyGroupEntity = studyGroupRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException(String.format("Unknown study group id: %s%n", id)));
+            studyGroupDtos.add(new LoginResponseDto.StudyGroupDto(
+                    studyGroupEntity.getId(),
+                    studyGroupEntity.getName(),
+                    studyGroupEntity.getTeacherId()
+            ));
+        }
         return new LoginResponseDto(
                 token.getToken(),
                 token.getExpiresAt(),
@@ -104,9 +108,9 @@ public class AuthService {
                         roleEntity.getName(),
                         roleEntity.getPermissions(),
                         new LoginResponseDto.DepartmentDto(
-                                department.getId(),
-                                department.getName(),
-                                department.getCode()
+                                departmentEntity.getId(),
+                                departmentEntity.getName(),
+                                departmentEntity.getCode()
                         ),
                         studyGroupDtos
                 )

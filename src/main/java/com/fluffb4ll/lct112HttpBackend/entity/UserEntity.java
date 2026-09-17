@@ -1,13 +1,12 @@
 package com.fluffb4ll.lct112HttpBackend.entity;
 
 import com.fluffb4ll.lct112HttpBackend.util.IdGeneratorUtil;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -48,6 +47,15 @@ public class UserEntity {
     @Setter
     @Column(name = "is_active")
     private boolean active;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "study_group_members",
+            schema = "iam",
+            joinColumns = @JoinColumn(name = "student_id")
+    )
+    @Column(name = "group_id")
+    private List<UUID> studyGroupIds = new ArrayList<>();
 
     public UserEntity(String username, String passwordHash, String fullName, int roleId) {
         id = IdGeneratorUtil.generateId();
