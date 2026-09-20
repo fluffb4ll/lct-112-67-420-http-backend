@@ -31,13 +31,6 @@ public class UserEntity {
     @Column(name = "full_name", length = 150, nullable = false)
     private String fullName;
 
-//    @Column(name = "role_id", nullable = false)
-//    private int roleId;
-//
-//    @Setter
-//    @Column(name = "department_id")
-//    private UUID departmentId;
-
     @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
@@ -59,14 +52,9 @@ public class UserEntity {
     @Column(name = "is_active")
     private boolean active;
 
-//    @ElementCollection(fetch = FetchType.LAZY)
-//    @CollectionTable(
-//            name = "study_group_members",
-//            schema = "iam",
-//            joinColumns = @JoinColumn(name = "student_id")
-//    )
-//    @Column(name = "group_id")
-//    private List<UUID> studyGroupIds = new ArrayList<>();
+    @Setter
+    @Column(name = "must_change_password")
+    private boolean mustChangePassword;
 
     @Setter
     @ManyToMany(fetch = FetchType.LAZY)
@@ -78,15 +66,6 @@ public class UserEntity {
     )
     private Set<StudyGroupEntity> studyGroups;
 
-//    public UserEntity(String username, String passwordHash, String fullName, int roleId) {
-//        id = IdGeneratorUtil.generateId();
-//        this.username = username;
-//        this.passwordHash = passwordHash;
-//        this.fullName = fullName;
-//        this.roleId = roleId;
-//        this.active = true;
-//        createdAt = OffsetDateTime.now();
-//    }
     public UserEntity(String username, String passwordHash, String fullName, RoleEntity role) {
         this.id = IdGeneratorUtil.generateId();
         this.username = username;

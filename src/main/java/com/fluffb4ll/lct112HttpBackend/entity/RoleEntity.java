@@ -32,6 +32,10 @@ public class RoleEntity {
     @Column(name = "permissions", columnDefinition = "integer[]")
     private Integer[] permissions;
 
+    public RoleEntity(int id) {
+        this.id = id;
+    }
+
     public Set<String> getPermissionsAsSet() {
         if (permissions == null) return Collections.emptySet();
         return Arrays.stream(permissions)

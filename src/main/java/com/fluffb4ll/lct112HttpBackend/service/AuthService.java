@@ -3,44 +3,26 @@ package com.fluffb4ll.lct112HttpBackend.service;
 import com.fluffb4ll.lct112HttpBackend.config.AuthProperties;
 import com.fluffb4ll.lct112HttpBackend.dto.response.LoginResponseDto;
 import com.fluffb4ll.lct112HttpBackend.entity.*;
-import com.fluffb4ll.lct112HttpBackend.model.enums.Permissions;
 import com.fluffb4ll.lct112HttpBackend.repository.*;
 import com.fluffb4ll.lct112HttpBackend.util.IdGeneratorUtil;
-import com.fluffb4ll.lct112HttpBackend.util.RegexValidator;
 import jakarta.transaction.Transactional;
-import org.hibernate.exception.DataException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 
 import javax.naming.AuthenticationException;
 import java.time.OffsetDateTime;
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
     private final UserRepository userRepository;
     private final AuthRepository authRepository;
-    private final RolesRepository rolesRepository;
     private final PasswordEncoder passEncoder;
     private final AuthProperties properties;
-    private final DepartmentRepository departmentRepository;
-    private final StudyGroupRepository studyGroupRepository;
 
-    public AuthService(UserRepository userRepository,
-                       AuthRepository authRepository,
-                       RolesRepository rolesRepository,
-                       PasswordEncoder passEncoder,
-                       AuthProperties properties, DepartmentRepository departmentRepository, StudyGroupRepository studyGroupRepository) {
-        this.userRepository = userRepository;
-        this.authRepository = authRepository;
-        this.rolesRepository = rolesRepository;
-        this.passEncoder = passEncoder;
-        this.properties = properties;
-        this.departmentRepository = departmentRepository;
-        this.studyGroupRepository = studyGroupRepository;
-    }
-
+    // TODO: разобраться с хэндлером
     @Transactional
     public LoginResponseDto login(String nickname, String rawPassword) throws AuthenticationException {
         UserEntity user = userRepository.findByUsername(nickname)
@@ -55,6 +37,11 @@ public class AuthService {
         AuthTokenEntity tokenEntity = new AuthTokenEntity(user.getId(), token, expiresAt);
         authRepository.save(tokenEntity);
         return createLoginResponse(user, tokenEntity);
+    }
+
+    @Transactional
+    public void logout(UUID token) {
+        authRepository.removeAuthTokenEntityById(token);
     }
 
 //    @Transactional
@@ -84,7 +71,6 @@ public class AuthService {
     }
 
     private LoginResponseDto createLoginResponse(UserEntity user, AuthTokenEntity token) {
-        // TODO: протестить, проверить оптимизацию
         LoginResponseDto.DepartmentDto departmentDto = null;
         if (user.getDepartment() != null)
             departmentDto = new LoginResponseDto.DepartmentDto(
