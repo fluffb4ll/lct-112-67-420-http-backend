@@ -11,7 +11,6 @@ import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     Optional<UserEntity> findByUsername(String username);
-    Optional<UserEntity> findById(UUID id);
     @Query("SELECT u FROM UserEntity u " +
             "JOIN FETCH u.role " +
             "LEFT JOIN FETCH u.department " +

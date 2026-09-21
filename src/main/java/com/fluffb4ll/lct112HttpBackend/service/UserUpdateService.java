@@ -15,7 +15,7 @@ import com.fluffb4ll.lct112HttpBackend.repository.DepartmentRepository;
 import com.fluffb4ll.lct112HttpBackend.repository.RolesRepository;
 import com.fluffb4ll.lct112HttpBackend.repository.UserRepository;
 import com.fluffb4ll.lct112HttpBackend.util.HttpRequestUtil;
-import com.fluffb4ll.lct112HttpBackend.util.RegexValidator;
+import com.fluffb4ll.lct112HttpBackend.util.RegexSecurityUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -50,11 +50,11 @@ public class UserUpdateService {
             if (request.departmentId() != null)
                     department = departmentRepository.getReferenceById(request.departmentId());
 
-            if (RegexValidator.isNotAValidUsername(request.username()))
+            if (RegexSecurityUtil.isNotAValidUsername(request.username()))
                 throw new UserUpdateException("Bad username formatting");
-            if (RegexValidator.isNotAValidPassword(request.password()))
+            if (RegexSecurityUtil.isNotAValidPassword(request.password()))
                 throw new UserUpdateException("Bad password formatting");
-            if (RegexValidator.isNotAValidFullName(request.fullName()))
+            if (RegexSecurityUtil.isNotAValidFullName(request.fullName()))
                 throw new UserUpdateException("Bas full name formatting");
 
             UserEntity newUser = userFactory.createUserWithPasswordHashing(
@@ -102,7 +102,7 @@ public class UserUpdateService {
         boolean isSelfUpdate = targetUser.getId().equals(currentUser.getId());
 
         if (request.username() != null && !request.username().equals(targetUser.getUsername())) {
-            if (RegexValidator.isNotAValidUsername(request.username())) {
+            if (RegexSecurityUtil.isNotAValidUsername(request.username())) {
                 throw new UserUpdateException("Bad username formatting");
             }
             if (userRepository.existsByUsername(request.username())) {
@@ -112,14 +112,14 @@ public class UserUpdateService {
         }
 
         if (request.password() != null) {
-            if (RegexValidator.isNotAValidPassword(request.password())) {
+            if (RegexSecurityUtil.isNotAValidPassword(request.password())) {
                 throw new UserUpdateException("Bad password formatting");
             }
             targetUser.setPasswordHash(passwordEncoder.encode(request.password()));
         }
 
         if (request.fullName() != null) {
-            if (RegexValidator.isNotAValidFullName(request.fullName()))
+            if (RegexSecurityUtil.isNotAValidFullName(request.fullName()))
                 throw new UserUpdateException("Bad full name formatting");
             targetUser.setFullName(request.fullName().trim());
         }

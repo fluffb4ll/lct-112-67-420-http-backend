@@ -9,7 +9,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-/** Кастомная имплементация PasswordEncoder с использованием BCryptEncoder.
+/** Кастомная реализация PasswordEncoder с использованием BCryptEncoder.
  * Пароль предварительно хэшируется с использованием алгоритма HMAC-SHA256, где пеппер используется в качестве ключа.
  * Это сделано для того, чтобы алгоритм BCrypt не обрезал хвост длинного пароля при хэшировании. */
 public class PepperedBCryptEncoder implements PasswordEncoder {
