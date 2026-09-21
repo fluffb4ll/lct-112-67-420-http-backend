@@ -22,7 +22,6 @@ public class AuthService {
     private final PasswordEncoder passEncoder;
     private final AuthProperties properties;
 
-    // TODO: разобраться с хэндлером
     @Transactional
     public LoginResponseDto login(String nickname, String rawPassword) throws AuthenticationException {
         UserEntity user = userRepository.findByUsername(nickname)
