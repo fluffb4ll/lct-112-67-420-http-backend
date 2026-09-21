@@ -65,7 +65,7 @@ public class AuthService {
 
     // TODO: проверить полноту проверок
     @Transactional
-    public void verifyAuthToken(UUID receivedAT, Permissions permission) throws AuthenticationException {
+    public UserEntity verifyAuthToken(UUID receivedAT, Permissions permission) throws AuthenticationException {
         AuthTokenEntity tokenEntity = authRepository.findByToken(receivedAT).orElse(null);
         if (tokenEntity == null)
             throw new AuthenticationException("Invalid authentication token");
@@ -75,6 +75,8 @@ public class AuthService {
         }
         if (!tokenEntity.getUser().getRole().getPermissionsAsSet().contains(permission.name()))
             throw new AuthenticationException("You do not have required permissions");
+
+        return tokenEntity.getUser();
     }
 
     private LoginResponseDto createLoginResponse(UserEntity user, AuthTokenEntity token) {
