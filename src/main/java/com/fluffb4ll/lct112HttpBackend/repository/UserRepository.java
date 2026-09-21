@@ -19,4 +19,5 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
             "WHERE u.id = :id")
     Optional<UserEntity> findByIdForLogin(@Param("id") UUID id);
     boolean existsByRole(RoleEntity role);
+    boolean existsByUsername(String username);
 }

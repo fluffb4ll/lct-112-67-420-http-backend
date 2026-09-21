@@ -66,7 +66,12 @@ public class UserEntity {
     )
     private Set<StudyGroupEntity> studyGroups;
 
-    public UserEntity(String username, String passwordHash, String fullName, RoleEntity role) {
+    public UserEntity(
+            String username,
+            String passwordHash,
+            String fullName,
+            RoleEntity role
+    ) {
         this.id = IdGeneratorUtil.generateId();
         this.username = username;
         this.passwordHash = passwordHash;

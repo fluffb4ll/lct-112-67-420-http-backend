@@ -3,6 +3,8 @@ package com.fluffb4ll.lct112HttpBackend.service;
 import com.fluffb4ll.lct112HttpBackend.config.AuthProperties;
 import com.fluffb4ll.lct112HttpBackend.dto.response.LoginResponseDto;
 import com.fluffb4ll.lct112HttpBackend.entity.*;
+import com.fluffb4ll.lct112HttpBackend.model.enums.Permissions;
+import com.fluffb4ll.lct112HttpBackend.model.exceptions.AuthTokenExpiredException;
 import com.fluffb4ll.lct112HttpBackend.repository.*;
 import com.fluffb4ll.lct112HttpBackend.util.IdGeneratorUtil;
 import jakarta.transaction.Transactional;
@@ -33,7 +35,7 @@ public class AuthService {
         OffsetDateTime expiresAt = OffsetDateTime.now()
                 .plusHours(properties.tokenExpirationHrs())
                 .plusMinutes(properties.tokenExpirationMins());
-        AuthTokenEntity tokenEntity = new AuthTokenEntity(user.getId(), token, expiresAt);
+        AuthTokenEntity tokenEntity = new AuthTokenEntity(user, token, expiresAt);
         authRepository.save(tokenEntity);
         return createLoginResponse(user, tokenEntity);
     }
@@ -61,12 +63,18 @@ public class AuthService {
 //        return user.getId();
 //    }
 
+    // TODO: проверить полноту проверок
     @Transactional
-    public boolean verifyAuthToken(UUID userId, UUID receivedAT) {
-        return authRepository.findTokenByUserId(userId)
-                .filter(stored -> stored.getToken().equals(receivedAT))
-                .filter(stored -> stored.getExpiresAt().isAfter(OffsetDateTime.now()))
-                .isPresent();
+    public void verifyAuthToken(UUID receivedAT, Permissions permission) throws AuthenticationException {
+        AuthTokenEntity tokenEntity = authRepository.findByToken(receivedAT).orElse(null);
+        if (tokenEntity == null)
+            throw new AuthenticationException("Invalid authentication token");
+        if (tokenEntity.getExpiresAt().isBefore(OffsetDateTime.now())) {
+            logout(receivedAT);
+            throw new AuthTokenExpiredException("Authentication token expired");
+        }
+        if (!tokenEntity.getUser().getRole().getPermissionsAsSet().contains(permission.name()))
+            throw new AuthenticationException("You do not have required permissions");
     }
 
     private LoginResponseDto createLoginResponse(UserEntity user, AuthTokenEntity token) {
