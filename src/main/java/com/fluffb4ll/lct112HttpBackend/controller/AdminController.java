@@ -2,6 +2,7 @@ package com.fluffb4ll.lct112HttpBackend.controller;
 
 import com.fluffb4ll.lct112HttpBackend.dto.request.CreateUserRequestDto;
 import com.fluffb4ll.lct112HttpBackend.dto.request.DeleteUserRequestDto;
+import com.fluffb4ll.lct112HttpBackend.dto.request.UpdateUserRequestDto;
 import com.fluffb4ll.lct112HttpBackend.service.UserUpdateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,15 @@ public class AdminController {
             @RequestBody DeleteUserRequestDto request
     ) throws AuthenticationException {
         userUpdateService.deleteUser(UUID.fromString(token), request);
+        return ResponseEntity.ok().body(null);
+    }
+
+    @PostMapping("/updateUser")
+    public ResponseEntity<Void> updateUser(
+            @CookieValue(name = "AUTH_TOKEN") String token,
+            @RequestBody UpdateUserRequestDto request
+    ) throws AuthenticationException {
+        userUpdateService.updateUser(UUID.fromString(token), request);
         return ResponseEntity.ok().body(null);
     }
 }

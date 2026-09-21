@@ -1,5 +1,6 @@
 package com.fluffb4ll.lct112HttpBackend.entity;
 
+import com.fluffb4ll.lct112HttpBackend.dto.request.UpdateUserRequestDto;
 import com.fluffb4ll.lct112HttpBackend.util.IdGeneratorUtil;
 import jakarta.persistence.*;
 import lombok.*;
@@ -80,5 +81,9 @@ public class UserEntity {
         this.active = true;
         this.createdAt = OffsetDateTime.now();
         this.updatedAt = OffsetDateTime.now();
+    }
+
+    public void update(UpdateUserRequestDto data) {
+
     }
 }

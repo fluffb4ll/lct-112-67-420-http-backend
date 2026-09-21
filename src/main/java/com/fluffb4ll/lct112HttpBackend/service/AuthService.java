@@ -28,6 +28,8 @@ public class AuthService {
     public LoginResponseDto login(String nickname, String rawPassword) throws AuthenticationException {
         UserEntity user = userRepository.findByUsername(nickname)
                 .orElseThrow(() -> new AuthenticationException("Wrong credentials"));
+        if (!user.isActive())
+            throw new AuthenticationException("Your account is deactivated. Contact admin for more information");
         if (!passEncoder.matches(rawPassword, user.getPasswordHash()))
             throw new AuthenticationException("Wrong credentials");
 
