@@ -4,7 +4,7 @@ import com.fluffb4ll.lct112HttpBackend.dto.response.ErrorResponseDto;
 import javax.naming.AuthenticationException;
 
 import com.fluffb4ll.lct112HttpBackend.model.exceptions.AuthTokenExpiredException;
-import com.fluffb4ll.lct112HttpBackend.model.exceptions.UserCreationException;
+import com.fluffb4ll.lct112HttpBackend.model.exceptions.UserUpdateException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +19,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(401).body(response);
     }
 
-    @ExceptionHandler(UserCreationException.class)
-    public ResponseEntity<ErrorResponseDto> processUserCreationError(UserCreationException e) {
+    @ExceptionHandler(UserUpdateException.class)
+    public ResponseEntity<ErrorResponseDto> processUserCreationError(UserUpdateException e) {
         ErrorResponseDto response = new ErrorResponseDto(e.getMessage());
         return ResponseEntity.status(409).body(response);
     }
