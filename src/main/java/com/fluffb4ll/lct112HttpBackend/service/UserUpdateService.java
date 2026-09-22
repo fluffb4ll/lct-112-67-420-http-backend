@@ -125,14 +125,15 @@ public class UserUpdateService {
         }
 
         if (request.roleId() != null) {
+            verifyAuthToken(token, request.roleId());
             RoleEntity role = rolesRepository.findById(request.roleId())
                     .orElseThrow(() -> new UserUpdateException("Invalid role id"));
             targetUser.setRole(role);
         }
 
-        if (request.removeDepartment()) {
+        if (Boolean.TRUE.equals(request.removeDepartment())) {
             targetUser.setDepartment(null);
-        } else if (request.departmentId() != null) {
+        } else if (request.removeDepartment() != null && request.departmentId() != null) {
             DepartmentEntity department = departmentRepository.findById(request.departmentId())
                     .orElseThrow(() -> new UserUpdateException("Invalid department id"));
             targetUser.setDepartment(department);
@@ -152,6 +153,8 @@ public class UserUpdateService {
             targetUser.setMustChangePassword(request.mustChangePassword());
         }
     }
+
+    // TODO: добавить чтение юзеров
 
     private UserEntity verifyAuthToken(UUID token, UserEntity targetUser) throws AuthenticationException {
         return authService.verifyAuthToken(token,
