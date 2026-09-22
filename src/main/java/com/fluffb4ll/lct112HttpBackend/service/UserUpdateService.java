@@ -4,7 +4,9 @@ import com.fluffb4ll.lct112HttpBackend.dto.request.CreateUserRequestDto;
 import com.fluffb4ll.lct112HttpBackend.dto.request.DeleteUserRequestDto;
 import com.fluffb4ll.lct112HttpBackend.dto.request.UpdateUserRequestDto;
 import com.fluffb4ll.lct112HttpBackend.dto.response.LoginResponseDto;
+import com.fluffb4ll.lct112HttpBackend.dto.response.PageResponseDto;
 import com.fluffb4ll.lct112HttpBackend.dto.response.UserInfoDto;
+import com.fluffb4ll.lct112HttpBackend.dto.response.UserTableRowDto;
 import com.fluffb4ll.lct112HttpBackend.engine.factory.UserFactory;
 import com.fluffb4ll.lct112HttpBackend.entity.DepartmentEntity;
 import com.fluffb4ll.lct112HttpBackend.entity.RoleEntity;
@@ -21,6 +23,10 @@ import com.fluffb4ll.lct112HttpBackend.util.RegexSecurityUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -41,7 +47,7 @@ public class UserUpdateService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public void createUser(UUID token, CreateUserRequestDto request) throws AuthenticationException {
+    public UUID createUser(UUID token, CreateUserRequestDto request) throws AuthenticationException {
         UserEntity user = verifyAuthToken(token, request.roleId());
 
         if (userRepository.existsByUsername(request.username()))
@@ -79,6 +85,8 @@ public class UserUpdateService {
                     newUser,
                     HttpRequestUtil.getClientIp()
             );
+
+            return newUser.getId();
         } catch (DataIntegrityViolationException e) {
             throw new UserUpdateException("Invalid arguments");
         }
@@ -188,11 +196,30 @@ public class UserUpdateService {
         }
     }
 
+    @Transactional
     public UserInfoDto getUser(UUID token, UUID userId) throws AuthenticationException {
         authService.verifyAuthToken(token, Permissions.ADMIN_CAN_READ_USERINFO);
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserUpdateException("User not found"));
         return UserInfoDto.fromEntity(user);
+    }
+
+    @Transactional
+    public PageResponseDto<UserTableRowDto> getUsers(UUID token, int page, int size) throws AuthenticationException {
+        authService.verifyAuthToken(token, Permissions.ADMIN_CAN_READ_USERINFO);
+
+        int validatedSize = Math.clamp(size, 1, 100);
+        int validatedPage = Math.max(page, 0);
+
+        Pageable pageable = PageRequest.of(
+                validatedPage,
+                validatedSize,
+                Sort.by(Sort.Direction.ASC, "fullName")
+        );
+
+        Page<UserTableRowDto> resultPage = userRepository.findAllForTable(pageable);
+
+        return PageResponseDto.from(resultPage);
     }
 
     private UserEntity verifyAuthToken(UUID token, UserEntity targetUser) throws AuthenticationException {
