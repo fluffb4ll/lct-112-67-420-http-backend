@@ -23,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.naming.AuthenticationException;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Service
@@ -80,6 +81,8 @@ public class UserUpdateService {
         }
     }
 
+    // TODO: отключать юзера и выставлять флаг на чистку, а не сразу же удалять из бд?
+    //  может использоваться для отката действия админом.
     @Transactional
     public void deleteUser(UUID token, DeleteUserRequestDto request) throws AuthenticationException {
         UserEntity targetUser = userRepository.findById(request.userId())
@@ -91,37 +94,48 @@ public class UserUpdateService {
             throw new UserUpdateException("Suicide is prohibited :)");
 
         userRepository.delete(targetUser);
+        auditService.logAction(
+                user.getId(),
+                EventType.USER_DELETION,
+                EntityType.USER,
+                targetUser.getId(),
+                targetUser,
+                null,
+                HttpRequestUtil.getClientIp()
+        );
     }
 
     @Transactional
     public void updateUser(UUID token, UpdateUserRequestDto request) throws AuthenticationException {
         UserEntity targetUser = userRepository.findById(request.userId())
                 .orElseThrow(() -> new UserUpdateException("User not found"));
+        UserEntity targetUserOld = new UserEntity(targetUser);
 
         UserEntity currentUser = verifyAuthToken(token, targetUser);
         boolean isSelfUpdate = targetUser.getId().equals(currentUser.getId());
+        boolean wasUpdated = false;
 
         if (request.username() != null && !request.username().equals(targetUser.getUsername())) {
-            if (RegexSecurityUtil.isNotAValidUsername(request.username())) {
+            if (RegexSecurityUtil.isNotAValidUsername(request.username()))
                 throw new UserUpdateException("Bad username formatting");
-            }
-            if (userRepository.existsByUsername(request.username())) {
+            if (userRepository.existsByUsername(request.username()))
                 throw new UserUpdateException("Username already taken");
-            }
             targetUser.setUsername(request.username());
+            wasUpdated = true;
         }
 
         if (request.password() != null) {
-            if (RegexSecurityUtil.isNotAValidPassword(request.password())) {
+            if (RegexSecurityUtil.isNotAValidPassword(request.password()))
                 throw new UserUpdateException("Bad password formatting");
-            }
             targetUser.setPasswordHash(passwordEncoder.encode(request.password()));
+            wasUpdated = true;
         }
 
         if (request.fullName() != null) {
             if (RegexSecurityUtil.isNotAValidFullName(request.fullName()))
                 throw new UserUpdateException("Bad full name formatting");
             targetUser.setFullName(request.fullName().trim());
+            wasUpdated = true;
         }
 
         if (request.roleId() != null) {
@@ -129,6 +143,7 @@ public class UserUpdateService {
             RoleEntity role = rolesRepository.findById(request.roleId())
                     .orElseThrow(() -> new UserUpdateException("Invalid role id"));
             targetUser.setRole(role);
+            wasUpdated = true;
         }
 
         if (Boolean.TRUE.equals(request.removeDepartment())) {
@@ -137,6 +152,7 @@ public class UserUpdateService {
             DepartmentEntity department = departmentRepository.findById(request.departmentId())
                     .orElseThrow(() -> new UserUpdateException("Invalid department id"));
             targetUser.setDepartment(department);
+            wasUpdated = true;
         }
 
         if (request.isActive() != null) {
@@ -144,6 +160,7 @@ public class UserUpdateService {
                 throw new UserUpdateException("Suicide is prohibited :)");
             }
             targetUser.setActive(request.isActive());
+            wasUpdated = true;
         }
 
         if (request.mustChangePassword() != null) {
@@ -151,6 +168,20 @@ public class UserUpdateService {
                 throw new UserUpdateException("It's your password - simply change it!");
             }
             targetUser.setMustChangePassword(request.mustChangePassword());
+            wasUpdated = true;
+        }
+
+        if (wasUpdated) {
+            targetUser.setUpdatedAt(OffsetDateTime.now());
+            auditService.logAction(
+                    currentUser.getId(),
+                    EventType.USER_UPDATE,
+                    EntityType.USER,
+                    targetUser.getId(),
+                    targetUserOld,
+                    targetUser,
+                    HttpRequestUtil.getClientIp()
+            );
         }
     }
 
