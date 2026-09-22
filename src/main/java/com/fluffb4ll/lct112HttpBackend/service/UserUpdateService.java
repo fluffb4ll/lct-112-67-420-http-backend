@@ -87,8 +87,8 @@ public class UserUpdateService {
     // TODO: отключать юзера и выставлять флаг на чистку, а не сразу же удалять из бд?
     //  может использоваться для отката действия админом.
     @Transactional
-    public void deleteUser(UUID token, DeleteUserRequestDto request) throws AuthenticationException {
-        UserEntity targetUser = userRepository.findById(request.userId())
+    public void deleteUser(UUID token, UUID userId) throws AuthenticationException {
+        UserEntity targetUser = userRepository.findById(userId)
                 .orElseThrow(() -> new UserUpdateException("User not found"));
 
         UserEntity user = verifyAuthToken(token, targetUser);

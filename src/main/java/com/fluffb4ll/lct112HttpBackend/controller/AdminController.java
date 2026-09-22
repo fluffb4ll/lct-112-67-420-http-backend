@@ -28,12 +28,12 @@ public class AdminController {
         return ResponseEntity.ok().body(null);
     }
 
-    @PostMapping("/user/delete")
+    @DeleteMapping("/user/{uuid}")
     public ResponseEntity<Void> deleteUser(
             @CookieValue(name = "AUTH_TOKEN") String token,
-            @RequestBody DeleteUserRequestDto request
+            @PathVariable("uuid") UUID userId
     ) throws AuthenticationException {
-        userUpdateService.deleteUser(UUID.fromString(token), request);
+        userUpdateService.deleteUser(UUID.fromString(token), userId);
         return ResponseEntity.ok().body(null);
     }
 
@@ -49,8 +49,8 @@ public class AdminController {
     @GetMapping("user/{uuid}")
     public ResponseEntity<UserInfoDto> getUser(
             @CookieValue(name = "AUTH_TOKEN") String token,
-            @PathVariable("uuid") UUID uuid
+            @PathVariable("uuid") UUID userId
     ) throws AuthenticationException {
-        return ResponseEntity.ok().body(userUpdateService.getUser(UUID.fromString(token), uuid));
+        return ResponseEntity.ok().body(userUpdateService.getUser(UUID.fromString(token), userId));
     }
 }
