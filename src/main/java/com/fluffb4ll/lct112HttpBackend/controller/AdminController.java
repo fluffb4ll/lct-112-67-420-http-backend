@@ -3,13 +3,16 @@ package com.fluffb4ll.lct112HttpBackend.controller;
 import com.fluffb4ll.lct112HttpBackend.dto.request.CreateUserRequestDto;
 import com.fluffb4ll.lct112HttpBackend.dto.request.DeleteUserRequestDto;
 import com.fluffb4ll.lct112HttpBackend.dto.request.UpdateUserRequestDto;
+import com.fluffb4ll.lct112HttpBackend.dto.response.CreateUserResponseDto;
 import com.fluffb4ll.lct112HttpBackend.dto.response.UserInfoDto;
 import com.fluffb4ll.lct112HttpBackend.service.UserUpdateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 import javax.naming.AuthenticationException;
+import java.net.URI;
 import java.util.UUID;
 
 @RestController
@@ -18,17 +21,17 @@ import java.util.UUID;
 public class AdminController {
     private final UserUpdateService userUpdateService;
 
-    // TODO: редирект на созданный объект?
-    @PostMapping("/user/create")
-    public ResponseEntity<Void> createUser(
+    @PostMapping("/users/create")
+    public ResponseEntity<CreateUserResponseDto> createUser(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @RequestBody CreateUserRequestDto request
     ) throws AuthenticationException {
-        userUpdateService.createUser(UUID.fromString(token), request);
-        return ResponseEntity.ok().body(null);
+        UUID userId = userUpdateService.createUser(UUID.fromString(token), request);
+        URI location = URI.create("/api/admin/users/" + userId);
+        return ResponseEntity.created(location).body(new CreateUserResponseDto(userId));
     }
 
-    @DeleteMapping("/user/{uuid}")
+    @DeleteMapping("/users/{uuid}")
     public ResponseEntity<Void> deleteUser(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @PathVariable("uuid") UUID userId
@@ -37,7 +40,7 @@ public class AdminController {
         return ResponseEntity.ok().body(null);
     }
 
-    @PostMapping("/user/update")
+    @PostMapping("/users/update")
     public ResponseEntity<Void> updateUser(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @RequestBody UpdateUserRequestDto request
@@ -46,7 +49,7 @@ public class AdminController {
         return ResponseEntity.ok().body(null);
     }
 
-    @GetMapping("user/{uuid}")
+    @GetMapping("users/{uuid}")
     public ResponseEntity<UserInfoDto> getUser(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @PathVariable("uuid") UUID userId
