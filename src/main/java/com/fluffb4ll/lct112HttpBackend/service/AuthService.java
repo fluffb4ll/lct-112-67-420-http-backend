@@ -2,6 +2,7 @@ package com.fluffb4ll.lct112HttpBackend.service;
 
 import com.fluffb4ll.lct112HttpBackend.config.AuthProperties;
 import com.fluffb4ll.lct112HttpBackend.dto.response.LoginResponseDto;
+import com.fluffb4ll.lct112HttpBackend.dto.response.UserInfoDto;
 import com.fluffb4ll.lct112HttpBackend.entity.*;
 import com.fluffb4ll.lct112HttpBackend.model.enums.Permissions;
 import com.fluffb4ll.lct112HttpBackend.model.exceptions.AuthTokenExpiredException;
@@ -82,34 +83,10 @@ public class AuthService {
     }
 
     private LoginResponseDto createLoginResponse(UserEntity user, AuthTokenEntity token) {
-        LoginResponseDto.DepartmentDto departmentDto = null;
-        if (user.getDepartment() != null)
-            departmentDto = new LoginResponseDto.DepartmentDto(
-                    user.getDepartment().getId(),
-                    user.getDepartment().getCode(),
-                    user.getDepartment().getName()
-            );
-
-        List<LoginResponseDto.StudyGroupDto> studyGroupDtos = user.getStudyGroups().stream()
-                .map(g -> new LoginResponseDto.StudyGroupDto(
-                        g.getId(),
-                        g.getName(),
-                        g.getTeacherId()
-                ))
-                .toList();
-
         return new LoginResponseDto(
                 token.getToken(),
                 token.getExpiresAt(),
-                new LoginResponseDto.UserInfoDto(
-                        user.getId(),
-                        user.getUsername(),
-                        user.getFullName(),
-                        user.getRole().getName(),
-                        user.getRole().getPermissionsAsSet(),
-                        departmentDto,
-                        studyGroupDtos
-                )
+                UserInfoDto.fromEntity(user)
         );
     }
 }

@@ -14,7 +14,8 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public enum Permissions {
     ADMIN_CAN_EDIT_USERS(0),
-    ADMIN_CAN_EDIT_ADMINS(1);
+    ADMIN_CAN_EDIT_ADMINS(1),
+    ADMIN_CAN_READ_USERINFO(2);
 
     private final int index;
 

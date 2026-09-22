@@ -3,6 +3,8 @@ package com.fluffb4ll.lct112HttpBackend.service;
 import com.fluffb4ll.lct112HttpBackend.dto.request.CreateUserRequestDto;
 import com.fluffb4ll.lct112HttpBackend.dto.request.DeleteUserRequestDto;
 import com.fluffb4ll.lct112HttpBackend.dto.request.UpdateUserRequestDto;
+import com.fluffb4ll.lct112HttpBackend.dto.response.LoginResponseDto;
+import com.fluffb4ll.lct112HttpBackend.dto.response.UserInfoDto;
 import com.fluffb4ll.lct112HttpBackend.engine.factory.UserFactory;
 import com.fluffb4ll.lct112HttpBackend.entity.DepartmentEntity;
 import com.fluffb4ll.lct112HttpBackend.entity.RoleEntity;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import javax.naming.AuthenticationException;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -185,7 +188,12 @@ public class UserUpdateService {
         }
     }
 
-    // TODO: добавить чтение юзеров
+    public UserInfoDto getUser(UUID token, UUID userId) throws AuthenticationException {
+        authService.verifyAuthToken(token, Permissions.ADMIN_CAN_READ_USERINFO);
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserUpdateException("User not found"));
+        return UserInfoDto.fromEntity(user);
+    }
 
     private UserEntity verifyAuthToken(UUID token, UserEntity targetUser) throws AuthenticationException {
         return authService.verifyAuthToken(token,

@@ -3,6 +3,7 @@ package com.fluffb4ll.lct112HttpBackend.controller;
 import com.fluffb4ll.lct112HttpBackend.dto.request.CreateUserRequestDto;
 import com.fluffb4ll.lct112HttpBackend.dto.request.DeleteUserRequestDto;
 import com.fluffb4ll.lct112HttpBackend.dto.request.UpdateUserRequestDto;
+import com.fluffb4ll.lct112HttpBackend.dto.response.UserInfoDto;
 import com.fluffb4ll.lct112HttpBackend.service.UserUpdateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,8 @@ import java.util.UUID;
 public class AdminController {
     private final UserUpdateService userUpdateService;
 
-    @PostMapping("/createUser")
+    // TODO: редирект на созданный объект?
+    @PostMapping("/user/create")
     public ResponseEntity<Void> createUser(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @RequestBody CreateUserRequestDto request
@@ -26,7 +28,7 @@ public class AdminController {
         return ResponseEntity.ok().body(null);
     }
 
-    @PostMapping("/deleteUser")
+    @PostMapping("/user/delete")
     public ResponseEntity<Void> deleteUser(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @RequestBody DeleteUserRequestDto request
@@ -35,12 +37,20 @@ public class AdminController {
         return ResponseEntity.ok().body(null);
     }
 
-    @PostMapping("/updateUser")
+    @PostMapping("/user/update")
     public ResponseEntity<Void> updateUser(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @RequestBody UpdateUserRequestDto request
     ) throws AuthenticationException {
         userUpdateService.updateUser(UUID.fromString(token), request);
         return ResponseEntity.ok().body(null);
+    }
+
+    @GetMapping("user/{uuid}")
+    public ResponseEntity<UserInfoDto> getUser(
+            @CookieValue(name = "AUTH_TOKEN") String token,
+            @PathVariable("uuid") UUID uuid
+    ) throws AuthenticationException {
+        return ResponseEntity.ok().body(userUpdateService.getUser(UUID.fromString(token), uuid));
     }
 }
