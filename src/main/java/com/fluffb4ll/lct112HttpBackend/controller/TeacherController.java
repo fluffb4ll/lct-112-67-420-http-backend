@@ -16,7 +16,7 @@ public class TeacherController {
     @PostMapping("/studyGroup/create")
     public ResponseEntity<CreateStudyGroupResponseDto> createStudyGroup(
             @CookieValue(name = "AUTH_TOKEN") String token,
-            CreateStudyGroupRequestDto request
+            @RequestBody CreateStudyGroupRequestDto request
     ) {
         return ResponseEntity.ok().body(null);
     }
@@ -24,7 +24,7 @@ public class TeacherController {
     @PostMapping("/studyGroup/update")
     public ResponseEntity<Void> updateStudyGroup(
             @CookieValue(name = "AUTH_TOKEN") String token,
-            UpdateStudyGroupRequestDto request
+            @RequestBody UpdateStudyGroupRequestDto request
     ) {
         return ResponseEntity.ok().body(null);
     }

@@ -1,4 +1,10 @@
 package com.fluffb4ll.lct112HttpBackend.dto.request;
 
-public class UpdateStudyGroupRequestDto {
+import java.util.UUID;
+
+public record UpdateStudyGroupRequestDto(
+        UUID groupId,
+        String name,
+        UUID teacherId
+) {
 }

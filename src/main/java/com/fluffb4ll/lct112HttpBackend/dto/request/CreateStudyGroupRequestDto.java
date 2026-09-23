@@ -1,4 +1,9 @@
 package com.fluffb4ll.lct112HttpBackend.dto.request;
 
-public class CreateStudyGroupRequestDto {
+import java.util.UUID;
+
+public record CreateStudyGroupRequestDto(
+        String name,
+        UUID teacherId
+) {
 }
