@@ -69,14 +69,14 @@ public class AuthService {
     // TODO: проверить полноту проверок
     @Transactional
     public UserEntity verifyAuthToken(UUID receivedAT, Permissions permission) throws AuthenticationException {
-        AuthTokenEntity tokenEntity = authRepository.findByToken(receivedAT).orElse(null);
-        if (tokenEntity == null)
-            throw new AuthenticationException("Invalid authentication token");
-        if (tokenEntity.getExpiresAt().isBefore(OffsetDateTime.now())) {
-            logout(receivedAT);
+        AuthTokenEntity tokenEntity = authRepository.findByTokenWithUserAndRole(receivedAT)
+                .orElseThrow(() -> new AuthenticationException("Invalid authentication token"));
+        if (tokenEntity.getExpiresAt().isBefore(OffsetDateTime.now()))
             throw new AuthTokenExpiredException("Authentication token expired");
-        }
-        if (!tokenEntity.getUser().getRole().getPermissionsAsSet().contains(permission.name()))
+        if (!tokenEntity.getUser().isActive())
+            throw new AuthenticationException("Your account is deactivated. Contact your admin");
+        if (permission != null &&
+                !tokenEntity.getUser().getRole().getPermissionsAsSet().contains(permission.name()))
             throw new AuthenticationException("You do not have required permissions");
 
         return tokenEntity.getUser();
