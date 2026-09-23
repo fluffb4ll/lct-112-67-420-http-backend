@@ -1,7 +1,6 @@
 package com.fluffb4ll.lct112HttpBackend.controller;
 
 import com.fluffb4ll.lct112HttpBackend.dto.request.CreateUserRequestDto;
-import com.fluffb4ll.lct112HttpBackend.dto.request.DeleteUserRequestDto;
 import com.fluffb4ll.lct112HttpBackend.dto.request.UpdateUserRequestDto;
 import com.fluffb4ll.lct112HttpBackend.dto.response.CreateUserResponseDto;
 import com.fluffb4ll.lct112HttpBackend.dto.response.PageResponseDto;
@@ -11,7 +10,6 @@ import com.fluffb4ll.lct112HttpBackend.service.UserUpdateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.view.RedirectView;
 
 import javax.naming.AuthenticationException;
 import java.net.URI;

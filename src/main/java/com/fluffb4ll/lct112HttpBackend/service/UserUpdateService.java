@@ -1,9 +1,7 @@
 package com.fluffb4ll.lct112HttpBackend.service;
 
 import com.fluffb4ll.lct112HttpBackend.dto.request.CreateUserRequestDto;
-import com.fluffb4ll.lct112HttpBackend.dto.request.DeleteUserRequestDto;
 import com.fluffb4ll.lct112HttpBackend.dto.request.UpdateUserRequestDto;
-import com.fluffb4ll.lct112HttpBackend.dto.response.LoginResponseDto;
 import com.fluffb4ll.lct112HttpBackend.dto.response.PageResponseDto;
 import com.fluffb4ll.lct112HttpBackend.dto.response.UserInfoDto;
 import com.fluffb4ll.lct112HttpBackend.dto.response.UserTableRowDto;
