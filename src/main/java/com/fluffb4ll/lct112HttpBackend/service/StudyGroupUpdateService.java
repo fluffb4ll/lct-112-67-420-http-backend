@@ -12,6 +12,7 @@ import com.fluffb4ll.lct112HttpBackend.model.enums.EntityType;
 import com.fluffb4ll.lct112HttpBackend.model.enums.EventType;
 import com.fluffb4ll.lct112HttpBackend.model.enums.Permissions;
 import com.fluffb4ll.lct112HttpBackend.model.exceptions.StudyGroupException;
+import com.fluffb4ll.lct112HttpBackend.repository.StudyGroupMemberRepository;
 import com.fluffb4ll.lct112HttpBackend.repository.StudyGroupRepository;
 import com.fluffb4ll.lct112HttpBackend.repository.UserRepository;
 import com.fluffb4ll.lct112HttpBackend.util.HttpRequestUtil;
@@ -35,6 +36,7 @@ public class StudyGroupUpdateService {
     private final UserRepository userRepository;
     private final AuthService authService;
     private final AuditService auditService;
+    private final StudyGroupMemberRepository studyGroupMemberRepository;
 
     @Transactional
     public UUID createStudyGroup(UUID token, CreateStudyGroupRequestDto request) throws AuthenticationException {
@@ -130,5 +132,43 @@ public class StudyGroupUpdateService {
                 null,
                 HttpRequestUtil.getClientIp()
         );
+    }
+
+    @Transactional
+    public StudyGroupInfoDto getStudyGroup(UUID token, UUID groupId) throws AuthenticationException {
+        authService.verifyAuthToken(token, null);
+
+        StudyGroupEntity group = studyGroupRepository.findById(groupId)
+                .orElseThrow(() -> new StudyGroupException("Study group not found"));
+
+        List<UserEntity> members = studyGroupMemberRepository.findUsersByGroupId(groupId);
+
+        List<UserInfoDto> usersDtoList = members.stream()
+                .map(UserInfoDto::fromEntity)
+                .toList();
+
+        return new StudyGroupInfoDto(
+                group.getId(),
+                group.getName(),
+                usersDtoList
+        );
+    }
+
+    @Transactional
+    public PageResponseDto<StudyGroupTableRowDto> getStudyGroups(UUID token, int page, int size) throws AuthenticationException {
+        authService.verifyAuthToken(token, null);
+
+        int validatedSize = Math.clamp(size, 1, 100);
+        int validatedPage = Math.max(page, 0);
+
+        Pageable pageable = PageRequest.of(
+                validatedPage,
+                validatedSize,
+                Sort.by(Sort.Direction.ASC, "name")
+        );
+
+        Page<StudyGroupTableRowDto> resultPage = studyGroupRepository.findAllForTable(pageable);
+
+        return PageResponseDto.from(resultPage);
     }
 }

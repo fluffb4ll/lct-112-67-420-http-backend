@@ -11,4 +11,12 @@ public record StudyGroupTableRowDto(
             UUID id,
             String fullName
     ) {}
+
+    public StudyGroupTableRowDto(UUID id, String name, UUID teacherId, String teacherFullName) {
+        this(
+                id,
+                name,
+                teacherId != null ? new UserInfoDto(teacherId, teacherFullName) : null
+        );
+    }
 }

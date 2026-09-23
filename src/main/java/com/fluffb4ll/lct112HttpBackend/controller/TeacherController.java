@@ -53,7 +53,8 @@ public class TeacherController {
             @CookieValue(name = "AUTH_TOKEN") String token,
             @PathVariable("uuid") UUID groupId
     ) throws AuthenticationException {
-        return ResponseEntity.ok(null);
+        StudyGroupInfoDto response = studyGroupUpdateService.getStudyGroup(UUID.fromString(token), groupId);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/studyGroups")
@@ -62,6 +63,11 @@ public class TeacherController {
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size
     ) throws AuthenticationException {
-        return ResponseEntity.ok(null);
+        PageResponseDto<StudyGroupTableRowDto> response = studyGroupUpdateService.getStudyGroups(
+                UUID.fromString(token),
+                page,
+                size
+        );
+        return ResponseEntity.ok(response);
     }
 }

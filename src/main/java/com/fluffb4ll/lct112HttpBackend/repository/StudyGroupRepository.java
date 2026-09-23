@@ -1,5 +1,6 @@
 package com.fluffb4ll.lct112HttpBackend.repository;
 
+import com.fluffb4ll.lct112HttpBackend.dto.response.StudyGroupTableRowDto;
 import com.fluffb4ll.lct112HttpBackend.entity.StudyGroupEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +20,15 @@ public interface StudyGroupRepository extends JpaRepository<StudyGroupEntity, UU
             "WHERE g.id = :id")
     Optional<StudyGroupEntity> findByIdWithStudents(@Param("id") UUID id);
 
-    @EntityGraph(attributePaths = {"teacher"})
-    @Query("SELECT g FROM StudyGroupEntity g")
-    Page<StudyGroupEntity> findAllForTable(Pageable pageable);
+    @Query("""
+    SELECT new com.fluffb4ll.lct112HttpBackend.dto.response.StudyGroupTableRowDto(
+        g.id,
+        g.name,
+        t.id,
+        t.fullName
+    )
+    FROM StudyGroupEntity g
+    LEFT JOIN g.teacher t
+    """)
+    Page<StudyGroupTableRowDto> findAllForTable(Pageable pageable);
 }
