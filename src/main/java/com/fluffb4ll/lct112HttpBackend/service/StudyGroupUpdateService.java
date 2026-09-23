@@ -38,6 +38,7 @@ public class StudyGroupUpdateService {
     private final AuditService auditService;
     private final StudyGroupMemberRepository studyGroupMemberRepository;
 
+    // TODO: перенести возможность создания групп к админу?
     @Transactional
     public UUID createStudyGroup(UUID token, CreateStudyGroupRequestDto request) throws AuthenticationException {
         UserEntity currentUser = authService.verifyAuthToken(token, Permissions.TEACHER_CAN_EDIT_GROUPS);
@@ -78,6 +79,9 @@ public class StudyGroupUpdateService {
         StudyGroupEntity targetGroup = studyGroupRepository.findById(request.groupId())
                 .orElseThrow(() -> new StudyGroupException("Study group not found"));
 
+        if (!targetGroup.getTeacher().equals(currentUser))
+            throw new StudyGroupException("You do not have permissions to edit this study group");
+
         StudyGroupEntity oldGroupState = new StudyGroupEntity(targetGroup);
         boolean wasUpdated = false;
 
@@ -89,6 +93,7 @@ public class StudyGroupUpdateService {
             wasUpdated = true;
         }
 
+        // TODO: перенести возможность передавать группу к админу?
         if (request.teacherId() != null) {
             UUID currentTeacherId = targetGroup.getTeacher() != null
                     ? targetGroup.getTeacher().getId() : null;

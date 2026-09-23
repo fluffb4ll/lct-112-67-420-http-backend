@@ -15,11 +15,6 @@ import java.util.UUID;
 public interface StudyGroupRepository extends JpaRepository<StudyGroupEntity, UUID> {
     boolean existsByName(String name);
 
-    @Query("SELECT g FROM StudyGroupEntity g " +
-            "LEFT JOIN FETCH g.students " +
-            "WHERE g.id = :id")
-    Optional<StudyGroupEntity> findByIdWithStudents(@Param("id") UUID id);
-
     @Query("""
     SELECT new com.fluffb4ll.lct112HttpBackend.dto.response.StudyGroupTableRowDto(
         g.id,

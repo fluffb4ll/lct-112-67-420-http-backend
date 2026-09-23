@@ -5,7 +5,6 @@ import com.fluffb4ll.lct112HttpBackend.dto.request.UpdateStudyGroupRequestDto;
 import com.fluffb4ll.lct112HttpBackend.dto.response.*;
 import com.fluffb4ll.lct112HttpBackend.service.StudyGroupUpdateService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +16,6 @@ import java.util.UUID;
 @RequestMapping("/api/teacher")
 @RequiredArgsConstructor
 public class TeacherController {
-
     private final StudyGroupUpdateService studyGroupUpdateService;
 
     @PostMapping("/studyGroup/create")

@@ -24,7 +24,7 @@ public record UserInfoDto(
     public record StudyGroupDto(
             UUID id,
             String name,
-            UUID teacherId
+            UUID teacher
     ) {}
 
     public static UserInfoDto fromEntity(UserEntity user) {
@@ -43,7 +43,7 @@ public record UserInfoDto(
         List<StudyGroupDto> studyGroupDtos = user.getStudyGroups() == null
                 ? List.of()
                 : user.getStudyGroups().stream()
-                  .map(g -> new StudyGroupDto(g.getId(), g.getName(), g.getTeacherId()))
+                  .map(g -> new StudyGroupDto(g.getId(), g.getName(), g.getTeacher().getId()))
                   .toList();
 
         return new UserInfoDto(
