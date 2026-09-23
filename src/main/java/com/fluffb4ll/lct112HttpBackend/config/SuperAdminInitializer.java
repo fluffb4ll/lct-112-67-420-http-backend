@@ -5,17 +5,16 @@ import com.fluffb4ll.lct112HttpBackend.entity.RoleEntity;
 import com.fluffb4ll.lct112HttpBackend.entity.UserEntity;
 import com.fluffb4ll.lct112HttpBackend.repository.RolesRepository;
 import com.fluffb4ll.lct112HttpBackend.repository.UserRepository;
+import com.fluffb4ll.lct112HttpBackend.util.RegexSecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.security.SecureRandom;
-import java.util.Base64;
 
 @Slf4j
 @Component
@@ -34,7 +33,7 @@ public class SuperAdminInitializer implements ApplicationRunner {
 
     @Override
     @Transactional
-    public void run(ApplicationArguments args) {
+    public void run(@NonNull ApplicationArguments args) {
         RoleEntity adminRole = rolesRepository.findByName("ROLE_ADMIN")
                 .orElseThrow(() -> new IllegalStateException("ROLE_ADMIN not found in DB"));
 
@@ -45,10 +44,16 @@ public class SuperAdminInitializer implements ApplicationRunner {
 
         log.warn("No admins found - initializing default superadmin profile...");
 
+        if (RegexSecurityUtil.isNotAValidUsername(adminUsername)) {
+            log.warn("Admin username is not formatted correctly - using a default one...");
+            adminUsername = "admin";
+        }
+
         boolean isGenerated = false;
         String rawPassword = configuredPassword;
-        if (rawPassword == null || rawPassword.isBlank()) {
-            rawPassword = generateSecurePassword();
+        if (RegexSecurityUtil.isNotAValidPassword(rawPassword)) {
+            log.warn("Admin password is not formatted correctly - generating a random one...");
+            rawPassword = RegexSecurityUtil.generateSecurePassword(16);
             isGenerated = true;
         }
 
@@ -73,11 +78,5 @@ public class SuperAdminInitializer implements ApplicationRunner {
             log.info("Password was set from env.");
         }
         log.info("==================================================================");
-    }
-
-    private String generateSecurePassword() {
-        byte[] randomBytes = new byte[12];
-        new SecureRandom().nextBytes(randomBytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     }
 }

@@ -2,6 +2,7 @@ package com.fluffb4ll.lct112HttpBackend.controller;
 
 import com.fluffb4ll.lct112HttpBackend.dto.request.LoginRequestDto;
 import com.fluffb4ll.lct112HttpBackend.dto.response.LoginResponseDto;
+import com.fluffb4ll.lct112HttpBackend.dto.response.UserInfoDto;
 import com.fluffb4ll.lct112HttpBackend.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -21,7 +22,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto.UserInfoDto> login(@RequestBody LoginRequestDto authDto) throws AuthenticationException {
+    public ResponseEntity<UserInfoDto> login(@RequestBody LoginRequestDto authDto) throws AuthenticationException {
         LoginResponseDto loginDto = authService.login(authDto.username(), authDto.password());
 
         Duration maxAge = Duration.between(OffsetDateTime.now(), loginDto.expiresAt());

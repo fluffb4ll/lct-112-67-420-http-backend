@@ -7,6 +7,5 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface StudyGroupRepository extends JpaRepository<StudyGroupEntity, UUID> {
-    Optional<StudyGroupEntity> findById(UUID id);
     Optional<StudyGroupEntity> findByName(String name);
 }

@@ -5,8 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -14,6 +12,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "users", schema = "iam")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class UserEntity {
     @Id
     @Column(name = "id", nullable = false)
@@ -66,7 +65,12 @@ public class UserEntity {
     )
     private Set<StudyGroupEntity> studyGroups;
 
-    public UserEntity(String username, String passwordHash, String fullName, RoleEntity role) {
+    public UserEntity(
+            String username,
+            String passwordHash,
+            String fullName,
+            RoleEntity role
+    ) {
         this.id = IdGeneratorUtil.generateId();
         this.username = username;
         this.passwordHash = passwordHash;
@@ -75,5 +79,19 @@ public class UserEntity {
         this.active = true;
         this.createdAt = OffsetDateTime.now();
         this.updatedAt = OffsetDateTime.now();
+    }
+
+    public UserEntity(UserEntity entity) {
+        this.id = entity.getId();
+        this.username = entity.getUsername();
+        this.passwordHash = entity.getPasswordHash();
+        this.fullName = getFullName();
+        this.role = entity.getRole();
+        this.active = entity.isActive();
+        this.createdAt = entity.getCreatedAt();
+        this.updatedAt = entity.getUpdatedAt();
+        this.department = entity.getDepartment();
+        this.studyGroups = entity.getStudyGroups();
+        this.mustChangePassword = entity.isMustChangePassword();
     }
 }

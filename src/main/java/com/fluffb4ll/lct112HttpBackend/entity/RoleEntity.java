@@ -9,9 +9,7 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
@@ -43,10 +41,17 @@ public class RoleEntity {
                 .map(Permissions::name)
                 .collect(Collectors.toSet());
     }
-//
-//    public boolean addPermission(int permission) {
-//        return permissions.add(Permissions.fromIndex(permission).toString());
-//    }
+
+    public boolean addPermission(int permission) {
+        //return permissions.add(Permissions.fromIndex(permission).toString());
+        Set<Integer> permissionSet = new HashSet<>(List.of(permissions));
+        if (!permissionSet.contains(permission)) {
+            permissionSet.add(permission);
+            permissions = (Integer[]) permissionSet.toArray();
+            return true;
+        }
+        return false;
+    }
 //
 //    public boolean removePermission(int permission) {
 //        return permissions.remove(Permissions.fromIndex(permission).toString());

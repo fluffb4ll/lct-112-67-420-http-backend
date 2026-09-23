@@ -1,10 +1,7 @@
 package com.fluffb4ll.lct112HttpBackend.entity;
 
 import com.fluffb4ll.lct112HttpBackend.util.IdGeneratorUtil;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,8 +19,9 @@ public class AuthTokenEntity {
     @Column(name = "id", nullable = false)
     private UUID id;
 
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private UserEntity user;
 
     @Column(name = "token", nullable = false, unique = true)
     private UUID token;
@@ -38,18 +36,18 @@ public class AuthTokenEntity {
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 
-    public AuthTokenEntity(UUID userId, UUID token, String tokenType, OffsetDateTime expiresAt) {
+    public AuthTokenEntity(UserEntity user, UUID token, String tokenType, OffsetDateTime expiresAt) {
         id = IdGeneratorUtil.generateId();
-        this.userId = userId;
+        this.user = user;
         this.token = token;
         this.tokenType = tokenType;
         this.expiresAt = expiresAt;
         createdAt = OffsetDateTime.now();
     }
 
-    public AuthTokenEntity(UUID userId, UUID token, OffsetDateTime expiresAt) {
+    public AuthTokenEntity(UserEntity user, UUID token, OffsetDateTime expiresAt) {
         id = IdGeneratorUtil.generateId();
-        this.userId = userId;
+        this.user = user;
         this.token = token;
         tokenType = "SESSION";
         this.expiresAt = expiresAt;

@@ -2,7 +2,10 @@ package com.fluffb4ll.lct112HttpBackend.service;
 
 import com.fluffb4ll.lct112HttpBackend.config.AuthProperties;
 import com.fluffb4ll.lct112HttpBackend.dto.response.LoginResponseDto;
+import com.fluffb4ll.lct112HttpBackend.dto.response.UserInfoDto;
 import com.fluffb4ll.lct112HttpBackend.entity.*;
+import com.fluffb4ll.lct112HttpBackend.model.enums.Permissions;
+import com.fluffb4ll.lct112HttpBackend.model.exceptions.AuthTokenExpiredException;
 import com.fluffb4ll.lct112HttpBackend.repository.*;
 import com.fluffb4ll.lct112HttpBackend.util.IdGeneratorUtil;
 import jakarta.transaction.Transactional;
@@ -26,6 +29,8 @@ public class AuthService {
     public LoginResponseDto login(String nickname, String rawPassword) throws AuthenticationException {
         UserEntity user = userRepository.findByUsername(nickname)
                 .orElseThrow(() -> new AuthenticationException("Wrong credentials"));
+        if (!user.isActive())
+            throw new AuthenticationException("Your account is deactivated. Contact admin for more information");
         if (!passEncoder.matches(rawPassword, user.getPasswordHash()))
             throw new AuthenticationException("Wrong credentials");
 
@@ -33,7 +38,7 @@ public class AuthService {
         OffsetDateTime expiresAt = OffsetDateTime.now()
                 .plusHours(properties.tokenExpirationHrs())
                 .plusMinutes(properties.tokenExpirationMins());
-        AuthTokenEntity tokenEntity = new AuthTokenEntity(user.getId(), token, expiresAt);
+        AuthTokenEntity tokenEntity = new AuthTokenEntity(user, token, expiresAt);
         authRepository.save(tokenEntity);
         return createLoginResponse(user, tokenEntity);
     }
@@ -61,43 +66,27 @@ public class AuthService {
 //        return user.getId();
 //    }
 
+    // TODO: проверить полноту проверок
     @Transactional
-    public boolean verifyAuthToken(UUID userId, UUID receivedAT) {
-        return authRepository.findTokenByUserId(userId)
-                .filter(stored -> stored.getToken().equals(receivedAT))
-                .filter(stored -> stored.getExpiresAt().isAfter(OffsetDateTime.now()))
-                .isPresent();
+    public UserEntity verifyAuthToken(UUID receivedAT, Permissions permission) throws AuthenticationException {
+        AuthTokenEntity tokenEntity = authRepository.findByTokenWithUserAndRole(receivedAT)
+                .orElseThrow(() -> new AuthenticationException("Invalid authentication token"));
+        if (tokenEntity.getExpiresAt().isBefore(OffsetDateTime.now()))
+            throw new AuthTokenExpiredException("Authentication token expired");
+        if (!tokenEntity.getUser().isActive())
+            throw new AuthenticationException("Your account is deactivated. Contact your admin");
+        if (permission != null &&
+                !tokenEntity.getUser().getRole().getPermissionsAsSet().contains(permission.name()))
+            throw new AuthenticationException("You do not have required permissions");
+
+        return tokenEntity.getUser();
     }
 
     private LoginResponseDto createLoginResponse(UserEntity user, AuthTokenEntity token) {
-        LoginResponseDto.DepartmentDto departmentDto = null;
-        if (user.getDepartment() != null)
-            departmentDto = new LoginResponseDto.DepartmentDto(
-                    user.getDepartment().getId(),
-                    user.getDepartment().getCode(),
-                    user.getDepartment().getName()
-            );
-
-        List<LoginResponseDto.StudyGroupDto> studyGroupDtos = user.getStudyGroups().stream()
-                .map(g -> new LoginResponseDto.StudyGroupDto(
-                        g.getId(),
-                        g.getName(),
-                        g.getTeacherId()
-                ))
-                .toList();
-
         return new LoginResponseDto(
                 token.getToken(),
                 token.getExpiresAt(),
-                new LoginResponseDto.UserInfoDto(
-                        user.getId(),
-                        user.getUsername(),
-                        user.getFullName(),
-                        user.getRole().getName(),
-                        user.getRole().getPermissionsAsSet(),
-                        departmentDto,
-                        studyGroupDtos
-                )
+                UserInfoDto.fromEntity(user)
         );
     }
 }
