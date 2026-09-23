@@ -15,7 +15,8 @@ import java.util.Arrays;
 public enum Permissions {
     ADMIN_CAN_EDIT_USERS(0),
     ADMIN_CAN_EDIT_ADMINS(1),
-    ADMIN_CAN_READ_USERINFO(2);
+    ADMIN_CAN_READ_USERINFO(2),
+    TEACHER_CAN_EDIT_GROUPS(3);
 
     private final int index;
 

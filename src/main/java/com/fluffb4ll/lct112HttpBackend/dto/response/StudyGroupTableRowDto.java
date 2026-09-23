@@ -1,13 +1,11 @@
 package com.fluffb4ll.lct112HttpBackend.dto.response;
 
-import java.util.List;
 import java.util.UUID;
 
 public record StudyGroupTableRowDto(
         UUID id,
         String name,
-        UserInfoDto teacher,
-        List<UserInfoDto> students
+        UserInfoDto teacher
 ) {
     public record UserInfoDto(
             UUID id,

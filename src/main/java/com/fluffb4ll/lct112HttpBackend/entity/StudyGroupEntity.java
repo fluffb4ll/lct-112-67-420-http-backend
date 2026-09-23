@@ -1,10 +1,7 @@
 package com.fluffb4ll.lct112HttpBackend.entity;
 
 import com.fluffb4ll.lct112HttpBackend.util.IdGeneratorUtil;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,16 +24,24 @@ public class StudyGroupEntity {
     private String name;
 
     @Setter
-    @Column(name = "teacher_id", nullable = false)
-    private UUID teacherId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "teacher_id")
+    private UserEntity teacher;
 
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 
-    public StudyGroupEntity(String name, UUID teacherId) {
+    public StudyGroupEntity(String name, UserEntity teacher) {
         id = IdGeneratorUtil.generateId();
         this.name = name;
-        this.teacherId = teacherId;
+        this.teacher = teacher;
         createdAt = OffsetDateTime.now();
+    }
+
+    public StudyGroupEntity(StudyGroupEntity entity) {
+        id = entity.getId();
+        name = entity.getName();
+        teacher = entity.getTeacher();
+        createdAt = entity.getCreatedAt();
     }
 }

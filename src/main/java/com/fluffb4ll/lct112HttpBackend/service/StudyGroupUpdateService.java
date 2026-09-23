@@ -1,0 +1,134 @@
+package com.fluffb4ll.lct112HttpBackend.service;
+
+import com.fluffb4ll.lct112HttpBackend.dto.request.CreateStudyGroupRequestDto;
+import com.fluffb4ll.lct112HttpBackend.dto.request.UpdateStudyGroupRequestDto;
+import com.fluffb4ll.lct112HttpBackend.dto.response.PageResponseDto;
+import com.fluffb4ll.lct112HttpBackend.dto.response.StudyGroupInfoDto;
+import com.fluffb4ll.lct112HttpBackend.dto.response.StudyGroupTableRowDto;
+import com.fluffb4ll.lct112HttpBackend.dto.response.UserInfoDto;
+import com.fluffb4ll.lct112HttpBackend.entity.StudyGroupEntity;
+import com.fluffb4ll.lct112HttpBackend.entity.UserEntity;
+import com.fluffb4ll.lct112HttpBackend.model.enums.EntityType;
+import com.fluffb4ll.lct112HttpBackend.model.enums.EventType;
+import com.fluffb4ll.lct112HttpBackend.model.enums.Permissions;
+import com.fluffb4ll.lct112HttpBackend.model.exceptions.StudyGroupException;
+import com.fluffb4ll.lct112HttpBackend.repository.StudyGroupRepository;
+import com.fluffb4ll.lct112HttpBackend.repository.UserRepository;
+import com.fluffb4ll.lct112HttpBackend.util.HttpRequestUtil;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
+import javax.naming.AuthenticationException;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class StudyGroupUpdateService {
+
+    private final StudyGroupRepository studyGroupRepository;
+    private final UserRepository userRepository;
+    private final AuthService authService;
+    private final AuditService auditService;
+
+    @Transactional
+    public UUID createStudyGroup(UUID token, CreateStudyGroupRequestDto request) throws AuthenticationException {
+        UserEntity currentUser = authService.verifyAuthToken(token, Permissions.TEACHER_CAN_EDIT_GROUPS);
+
+        if (request.name() == null || request.name().isBlank())
+            throw new StudyGroupException("Group name cannot be empty");
+
+        String trimmedName = request.name().trim();
+        if (studyGroupRepository.existsByName(trimmedName))
+            throw new StudyGroupException("Group name is already taken");
+
+        UserEntity teacher = null;
+        if (request.teacherId() != null)
+            teacher = userRepository.findById(request.teacherId())
+                    .orElseThrow(() -> new StudyGroupException("Teacher not found"));
+
+        StudyGroupEntity newGroup = new StudyGroupEntity(trimmedName, teacher);
+
+        studyGroupRepository.save(newGroup);
+
+        auditService.logAction(
+                currentUser.getId(),
+                EventType.GROUP_CREATION,
+                EntityType.STUDY_GROUP,
+                newGroup.getId(),
+                null,
+                newGroup,
+                HttpRequestUtil.getClientIp()
+        );
+
+        return newGroup.getId();
+    }
+
+    @Transactional
+    public void updateStudyGroup(UUID token, UpdateStudyGroupRequestDto request) throws AuthenticationException {
+        UserEntity currentUser = authService.verifyAuthToken(token, Permissions.TEACHER_CAN_EDIT_GROUPS);
+
+        StudyGroupEntity targetGroup = studyGroupRepository.findById(request.groupId())
+                .orElseThrow(() -> new StudyGroupException("Study group not found"));
+
+        StudyGroupEntity oldGroupState = new StudyGroupEntity(targetGroup);
+        boolean wasUpdated = false;
+
+        if (request.name() != null && !request.name().isBlank() && !request.name().equals(targetGroup.getName())) {
+            String trimmedName = request.name().trim();
+            if (studyGroupRepository.existsByName(trimmedName))
+                throw new StudyGroupException("Group name is already taken");
+            targetGroup.setName(trimmedName);
+            wasUpdated = true;
+        }
+
+        if (request.teacherId() != null) {
+            UUID currentTeacherId = targetGroup.getTeacher() != null
+                    ? targetGroup.getTeacher().getId() : null;
+            if (!request.teacherId().equals(currentTeacherId)) {
+                UserEntity newTeacher = userRepository.findById(request.teacherId())
+                        .orElseThrow(() -> new StudyGroupException("Teacher not found"));
+                targetGroup.setTeacher(newTeacher);
+                wasUpdated = true;
+            }
+        }
+
+        if (wasUpdated) {
+            studyGroupRepository.save(targetGroup);
+            auditService.logAction(
+                    currentUser.getId(),
+                    EventType.GROUP_UPDATE,
+                    EntityType.STUDY_GROUP,
+                    targetGroup.getId(),
+                    oldGroupState,
+                    targetGroup,
+                    HttpRequestUtil.getClientIp()
+            );
+        }
+    }
+
+    @Transactional
+    public void deleteStudyGroup(UUID token, UUID groupId) throws AuthenticationException {
+        UserEntity currentUser = authService.verifyAuthToken(token, Permissions.TEACHER_CAN_EDIT_GROUPS);
+
+        StudyGroupEntity targetGroup = studyGroupRepository.findById(groupId)
+                .orElseThrow(() -> new StudyGroupException("Study group not found"));
+
+        studyGroupRepository.delete(targetGroup);
+
+        auditService.logAction(
+                currentUser.getId(),
+                EventType.GROUP_DELETION,
+                EntityType.STUDY_GROUP,
+                targetGroup.getId(),
+                targetGroup,
+                null,
+                HttpRequestUtil.getClientIp()
+        );
+    }
+}
