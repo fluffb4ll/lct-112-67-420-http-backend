@@ -25,6 +25,7 @@ public class ActionLogEntity {
     @JoinColumn(name = "user_id")
     private UserEntity user;
 
+    @Setter
     @Column(name = "event_type", nullable = false, length = 100)
     private String eventType;
 
@@ -47,9 +48,4 @@ public class ActionLogEntity {
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
-
-
-    public void setEventType(EventType type) {
-        eventType = type.name();
-    }
 }

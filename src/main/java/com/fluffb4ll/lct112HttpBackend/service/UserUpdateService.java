@@ -156,7 +156,8 @@ public class UserUpdateService {
 
         if (Boolean.TRUE.equals(request.removeDepartment())) {
             targetUser.setDepartment(null);
-        } else if (request.removeDepartment() != null && request.departmentId() != null) {
+            wasUpdated = true;
+        } else if (request.departmentId() != null) {
             DepartmentEntity department = departmentRepository.findById(request.departmentId())
                     .orElseThrow(() -> new UserUpdateException("Invalid department id"));
             targetUser.setDepartment(department);

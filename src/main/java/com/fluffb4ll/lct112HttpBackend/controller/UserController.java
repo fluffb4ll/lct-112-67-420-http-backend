@@ -27,7 +27,7 @@ public class UserController {
             @RequestBody CreateUserRequestDto request
     ) throws AuthenticationException {
         UUID userId = userUpdateService.createUser(UUID.fromString(token), request);
-        URI location = URI.create("/api/admin/users/" + userId);
+        URI location = URI.create("/api/users/" + userId);
         return ResponseEntity.created(location).body(new CreateUserResponseDto(userId));
     }
 
@@ -57,7 +57,7 @@ public class UserController {
         return ResponseEntity.ok().body(userUpdateService.getUser(UUID.fromString(token), userId));
     }
 
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<PageResponseDto<UserTableRowDto>> getUsers(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @RequestParam(name = "page", defaultValue = "0") int page,

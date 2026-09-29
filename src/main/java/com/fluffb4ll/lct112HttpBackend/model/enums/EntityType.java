@@ -9,6 +9,8 @@ public enum EntityType {
     STUDY_GROUP,
     DEPARTMENT,
     SCENARIO,
+    INCIDENT_CATEGORY,
+    SESSION,
     OPERATOR_CARD,
     EVALUATION,
     AUTH_TOKEN

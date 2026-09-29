@@ -7,6 +7,8 @@ import com.fluffb4ll.lct112HttpBackend.dto.response.StudyGroupInfoDto;
 import com.fluffb4ll.lct112HttpBackend.dto.response.StudyGroupTableRowDto;
 import com.fluffb4ll.lct112HttpBackend.dto.response.UserInfoDto;
 import com.fluffb4ll.lct112HttpBackend.entity.StudyGroupEntity;
+import com.fluffb4ll.lct112HttpBackend.entity.StudyGroupMemberEntity;
+import com.fluffb4ll.lct112HttpBackend.entity.StudyGroupMemberId;
 import com.fluffb4ll.lct112HttpBackend.entity.UserEntity;
 import com.fluffb4ll.lct112HttpBackend.model.enums.EntityType;
 import com.fluffb4ll.lct112HttpBackend.model.enums.EventType;
@@ -38,10 +40,9 @@ public class StudyGroupUpdateService {
     private final AuditService auditService;
     private final StudyGroupMemberRepository studyGroupMemberRepository;
 
-    // TODO: перенести возможность создания групп к админу?
     @Transactional
     public UUID createStudyGroup(UUID token, CreateStudyGroupRequestDto request) throws AuthenticationException {
-        UserEntity currentUser = authService.verifyAuthToken(token, Permissions.TEACHER_CAN_EDIT_GROUPS);
+        UserEntity currentUser = authService.verifyAuthToken(token, Permissions.ADMIN_CAN_EDIT_GROUPS);
 
         if (request.name() == null || request.name().isBlank())
             throw new StudyGroupException("Group name cannot be empty");
@@ -74,13 +75,10 @@ public class StudyGroupUpdateService {
 
     @Transactional
     public void updateStudyGroup(UUID token, UpdateStudyGroupRequestDto request) throws AuthenticationException {
-        UserEntity currentUser = authService.verifyAuthToken(token, Permissions.TEACHER_CAN_EDIT_GROUPS);
+        UserEntity currentUser = authService.verifyAuthToken(token, Permissions.ADMIN_CAN_EDIT_GROUPS);
 
         StudyGroupEntity targetGroup = studyGroupRepository.findById(request.groupId())
                 .orElseThrow(() -> new StudyGroupException("Study group not found"));
-
-        if (!targetGroup.getTeacher().equals(currentUser))
-            throw new StudyGroupException("You do not have permissions to edit this study group");
 
         StudyGroupEntity oldGroupState = new StudyGroupEntity(targetGroup);
         boolean wasUpdated = false;
@@ -93,7 +91,6 @@ public class StudyGroupUpdateService {
             wasUpdated = true;
         }
 
-        // TODO: перенести возможность передавать группу к админу?
         if (request.teacherId() != null) {
             UUID currentTeacherId = targetGroup.getTeacher() != null
                     ? targetGroup.getTeacher().getId() : null;
@@ -121,7 +118,7 @@ public class StudyGroupUpdateService {
 
     @Transactional
     public void deleteStudyGroup(UUID token, UUID groupId) throws AuthenticationException {
-        UserEntity currentUser = authService.verifyAuthToken(token, Permissions.TEACHER_CAN_EDIT_GROUPS);
+        UserEntity currentUser = authService.verifyAuthToken(token, Permissions.ADMIN_CAN_EDIT_GROUPS);
 
         StudyGroupEntity targetGroup = studyGroupRepository.findById(groupId)
                 .orElseThrow(() -> new StudyGroupException("Study group not found"));
@@ -134,6 +131,65 @@ public class StudyGroupUpdateService {
                 EntityType.STUDY_GROUP,
                 targetGroup.getId(),
                 targetGroup,
+                null,
+                HttpRequestUtil.getClientIp()
+        );
+    }
+
+    @Transactional
+    public void addMemberToStudyGroup(UUID token, UUID groupId, UUID studentId) throws AuthenticationException {
+        UserEntity currentUser = authService.verifyAuthToken(token, Permissions.ADMIN_CAN_EDIT_GROUPS);
+
+        StudyGroupEntity group = studyGroupRepository.findById(groupId)
+                .orElseThrow(() -> new StudyGroupException("Study group not found"));
+
+        UserEntity student = userRepository.findById(studentId)
+                .orElseThrow(() -> new StudyGroupException("User not found"));
+
+        if (!student.isActive()) {
+            throw new StudyGroupException("User is deactivated");
+        }
+
+        StudyGroupMemberId memberId = new StudyGroupMemberId(group.getId(), student.getId());
+        if (studyGroupMemberRepository.existsById(memberId)) {
+            throw new StudyGroupException("User is already a member of this study group");
+        }
+
+        StudyGroupMemberEntity member = new StudyGroupMemberEntity(group, student);
+        studyGroupMemberRepository.save(member);
+
+        auditService.logAction(
+                currentUser.getId(),
+                EventType.GROUP_UPDATE,
+                EntityType.STUDY_GROUP,
+                group.getId(),
+                null,
+                memberId,
+                HttpRequestUtil.getClientIp()
+        );
+    }
+
+    @Transactional
+    public void removeMemberFromStudyGroup(UUID token, UUID groupId, UUID studentId) throws AuthenticationException {
+        UserEntity currentUser = authService.verifyAuthToken(token, Permissions.ADMIN_CAN_EDIT_GROUPS);
+
+        if (!studyGroupRepository.existsById(groupId)) {
+            throw new StudyGroupException("Study group not found");
+        }
+
+        StudyGroupMemberId memberId = new StudyGroupMemberId(groupId, studentId);
+        if (!studyGroupMemberRepository.existsById(memberId)) {
+            throw new StudyGroupException("User is not a member of this study group");
+        }
+
+        studyGroupMemberRepository.deleteById(memberId);
+
+        auditService.logAction(
+                currentUser.getId(),
+                EventType.GROUP_UPDATE,
+                EntityType.STUDY_GROUP,
+                groupId,
+                memberId,
                 null,
                 HttpRequestUtil.getClientIp()
         );
