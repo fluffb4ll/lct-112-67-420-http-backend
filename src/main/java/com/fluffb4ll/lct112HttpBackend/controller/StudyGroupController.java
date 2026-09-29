@@ -13,12 +13,12 @@ import java.net.URI;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/teacher")
+@RequestMapping("/api/studyGroups")
 @RequiredArgsConstructor
-public class TeacherController {
+public class StudyGroupController {
     private final StudyGroupUpdateService studyGroupUpdateService;
 
-    @PostMapping("/studyGroup/create")
+    @PostMapping("/create")
     public ResponseEntity<CreateStudyGroupResponseDto> createStudyGroup(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @RequestBody CreateStudyGroupRequestDto request
@@ -28,7 +28,7 @@ public class TeacherController {
         return ResponseEntity.created(location).body(new CreateStudyGroupResponseDto(newGroupId));
     }
 
-    @PostMapping("/studyGroup/update")
+    @PostMapping("/update")
     public ResponseEntity<Void> updateStudyGroup(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @RequestBody UpdateStudyGroupRequestDto request
@@ -37,7 +37,7 @@ public class TeacherController {
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/studyGroup/{uuid}")
+    @DeleteMapping("/{uuid}")
     public ResponseEntity<Void> deleteStudyGroup(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @PathVariable("uuid") UUID groupId
@@ -46,7 +46,7 @@ public class TeacherController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/studyGroup/{uuid}")
+    @GetMapping("/{uuid}")
     public ResponseEntity<StudyGroupInfoDto> getStudyGroup(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @PathVariable("uuid") UUID groupId
@@ -55,7 +55,7 @@ public class TeacherController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/studyGroups")
+    @GetMapping("/")
     public ResponseEntity<PageResponseDto<StudyGroupTableRowDto>> getStudyGroups(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @RequestParam(name = "page", defaultValue = "0") int page,

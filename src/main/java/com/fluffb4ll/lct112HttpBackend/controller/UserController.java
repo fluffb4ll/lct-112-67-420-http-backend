@@ -16,12 +16,12 @@ import java.net.URI;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
-public class AdminController {
+public class UserController {
     private final UserUpdateService userUpdateService;
 
-    @PostMapping("/users/create")
+    @PostMapping("/create")
     public ResponseEntity<CreateUserResponseDto> createUser(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @RequestBody CreateUserRequestDto request
@@ -31,7 +31,7 @@ public class AdminController {
         return ResponseEntity.created(location).body(new CreateUserResponseDto(userId));
     }
 
-    @DeleteMapping("/users/{uuid}")
+    @DeleteMapping("/{uuid}")
     public ResponseEntity<Void> deleteUser(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @PathVariable("uuid") UUID userId
@@ -40,7 +40,7 @@ public class AdminController {
         return ResponseEntity.ok().body(null);
     }
 
-    @PostMapping("/users/update")
+    @PostMapping("/update")
     public ResponseEntity<Void> updateUser(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @RequestBody UpdateUserRequestDto request
@@ -49,7 +49,7 @@ public class AdminController {
         return ResponseEntity.ok().body(null);
     }
 
-    @GetMapping("/users/{uuid}")
+    @GetMapping("/{uuid}")
     public ResponseEntity<UserInfoDto> getUser(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @PathVariable("uuid") UUID userId
@@ -57,7 +57,7 @@ public class AdminController {
         return ResponseEntity.ok().body(userUpdateService.getUser(UUID.fromString(token), userId));
     }
 
-    @GetMapping("/users")
+    @GetMapping("/")
     public ResponseEntity<PageResponseDto<UserTableRowDto>> getUsers(
             @CookieValue(name = "AUTH_TOKEN") String token,
             @RequestParam(name = "page", defaultValue = "0") int page,
